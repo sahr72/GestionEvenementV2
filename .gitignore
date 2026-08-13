@@ -1,0 +1,34 @@
+# Build
+bin/
+obj/
+
+# Visual Studio
+.vs/
+*.user
+*.suo
+
+# Rider
+.idea/
+
+# VS Code
+.vscode/
+
+# Logs
+*.log
+
+# EF
+Migrations/*.Designer.cs
+
+# NuGet
+*.nupkg
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Docker
+docker-compose.override.yml
+
+# Secrets
+appsettings.Development.json
+secrets.json	

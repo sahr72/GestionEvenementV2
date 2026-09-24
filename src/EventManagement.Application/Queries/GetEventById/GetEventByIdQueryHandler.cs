@@ -3,7 +3,7 @@
 using EventManagement.Application.Interfaces;
 using EventManagement.Application.ReadModels;
 
-namespace EventManagement.Application.Queries;
+namespace EventManagement.Application.Queries.GetEventById;
 
 public sealed class GetEventByIdQueryHandler
 {

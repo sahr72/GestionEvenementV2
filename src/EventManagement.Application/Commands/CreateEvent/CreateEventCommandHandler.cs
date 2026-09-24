@@ -3,7 +3,7 @@
 using EventManagement.Application.Interfaces;
 using EventManagement.Domain.Entities;
 
-namespace EventManagement.Application.Commands;
+namespace EventManagement.Application.Commands.CreateEvent;
 /*
  * Le Handler utilise le Domaine ( Evenementconstructeur) pour créer l'entité.
    Il délègue la persistance à IEvenementRepository.

@@ -1,0 +1,79 @@
+﻿Install-Package Microsoft.EntityFrameworkCore.Design -ProjectName EventManagement.Api
+Install-Package Microsoft.EntityFrameworkCore.Design -Version 9.0.29 -ProjectName EventManagement.Api
+Quand vous tapez Add-Migration, EF Core :
+
+Compile le Startup Project (Api).
+Exécute Program.cs en mode design-time pour récupérer le DbContext configuré.
+Génère les fichiers de migration dans le projet cible (Infrastructure).
+
+Sans Microsoft.EntityFrameworkCore.Design dans Api, cette étape 2 échoue.
+Vérification
+Après installation, votre fichier EventManagement.Api.csproj doit contenir :
+<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.8">
+  <PrivateAssets>all</PrivateAssets>
+  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+</PackageReference>
+
+Relancer la migration
+Une fois le package installé (et la console fermée/rouverte si besoin) :
+Add-Migration InitialCreate -Project EventManagement.Infrastructure -StartupProject EventManagement.Api -OutputDir Migrations
+
+Récapitulatif
+
+
+
+Package
+Où installer
+Pourquoi
+
+
+
+Microsoft.EntityFrameworkCore
+Infrastructure
+ORM
+
+
+Npgsql.EntityFrameworkCore.PostgreSQL
+Infrastructure
+Provider PostgreSQL
+
+
+Microsoft.EntityFrameworkCore.Design
+Api (Startup)
+Runtime design-time pour les migrations
+
+
+Microsoft.EntityFrameworkCore.Tools
+Infrastructure
+Cmdlets PowerShell Add-Migration, etc.
+
+1.Docker
+se placer dans le dossier de docker-compose et lancer la commande suivante pour créer la base de données et exécuter les migrations :
+docker compose down
+docker compose up -d
+
+Redémarrer la console
+Si vous avez installé le package pendant que la console était ouverte, les cmdlets ne sont pas chargées.
+
+Fermez la Console du Gestionnaire de package (bouton X sur l’onglet).
+Rouvrez-la (Outils → Gestionnaire de package NuGet → Console du Gestionnaire de package).
+2.Créer et appliquer les migrations
+2.1 Add-Migration InitialCreate -Project EventManagement.Infrastructure -StartupProject EventManagement.Api -OutputDir Migrations
+2.2 Update-Database -Project EventManagement.Infrastructure -StartupProject EventManagement.Api
+
+
+3. Vérifier que la base de données a été créée et que les tables ont été générées correctement.
+# Voir si le conteneur tourne
+docker ps
+
+# Se connecter à la base pour vérifier les tables
+docker exec -it eventmanagement-postgres psql -U eventuser -d evenementV2db -c "\dt"
+
+Récapitulatif
+
+Élément                       Où / Quoi
+Chaîne de connexion           EventManagement.Api/appsettings.Development.json
+Hôte                          localhost (port 5432 mappé par Docker)
+Base						  evenementV2db
+Migrations					  Projet Infrastructure, commandes lancées depuis Api
+Correction docker-compose     pg_isready -U eventuser -d evenementV2db

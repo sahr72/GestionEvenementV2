@@ -76,3 +76,59 @@ EventQueryService : IEvenementQueryService pour les GET
 Injection des dependances de toutes les interfaces dans program.cs
 
 Étape 6 – Migrations et base de données
+
+
+GetEventsPagedQuery
+        │
+        ▼
+EvenementQueryService
+        │
+        ├── filtre
+        ├── Count
+        ├── OrderBy
+        ├── Skip / Take
+        │
+        ▼
+EventListItemReadModel
+        │
+        ▼
+PagedResult<EventListItemReadModel>
+et pour le détail:
+GetEventById
+      │
+      ▼
+EventDetailsReadModel
+Lab 2.2 – Validation FluentValidation
+Objectif : Valider les entrées avec FluentValidation.
+Étape 1 – Ajouter FluentValidation (packages nuget dans la couche Application)
+dotnet add src/EventManagement.Application package FluentValidation
+dotnet add src/EventManagement.Application package FluentValidation.DependencyInjectionExtensions
+Étape 2 – Validateurs
+Étape 3 – Injection dans l'API
+Étape 4 - Créer tous les DTOs dans la couche Application
+Étape 5 – Utilisation dans les endpoints: Classe statique séparée par entité,pas dans program.cs
+Étape 6 - Mapper les endpoints dans program.cs
+Critères d'acceptation
+Les validateurs sont injectés et utilisés.
+Une requête invalide retourne un 400 Bad Requestavec ProblemDetails.
+Les règles de validation (longueur, présence) sont respectées.
+Lab 2.3 – Gestion homogène des erreurs
+Objectif : Centraliser la gestion des erreurs avec ProblemDetails.
+Étape 1 – Ajouter les détails du problème dans program.cs
+Étape 2 – Middleware d'exception: // src/EventManagement.Api/Middleware/GlobalExceptionHandler.cs
+Critères d'acceptation
+Une DomainExceptionretourne un 409 Conflict.
+Une NotFoundExceptionretourne un 404 Not Found.
+Une erreur inattendue retourne un 500 Internal Server Error.
+Toutes les erreurs utilisent ProblemDetails.
+TP 2.4 – Tests applicatifs
+Objectif : Tester les handlers avec des mocks.
+Étape 1 – Ajouter NSubstitute: 
+dotnet add tests/EventManagement.Application.Tests package NSubstitute
+dotnet add tests/EventManagement.Application.Tests package FluentAssertions
+Étape 2 – Test d'un gestionnaire
+Critères d'acceptation
+Les tests applicatifs passent.
+Les mocks sont utilisés pour isoler le domaine.
+Les cas d'erreur (ex: événement introuvable) sont testés.
+6. Niveau Avancé — Durcissement et industrialisation

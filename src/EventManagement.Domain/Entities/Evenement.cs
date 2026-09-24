@@ -3,6 +3,7 @@ namespace EventManagement.Domain.Entities;
 using EventManagement.Domain.Common;
 using EventManagement.Domain.SmartEnums;
 using System.Runtime.ConstrainedExecution;
+using System.Xml.Linq;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 /*
  * 3. Vérification des principes DDD
@@ -108,6 +109,8 @@ public sealed class Evenement
         return commentaire;
     }
 
+    /*Avant application des règles de gestion
+   
     public void RemoveComment(Guid commentId)
     {
         var comment = _commentaires.FirstOrDefault(c => c.Id == commentId);
@@ -116,7 +119,20 @@ public sealed class Evenement
 
         _commentaires.Remove(comment);
     }
-    
+    */
+    // src/EventManagement.Domain/Entities/Event.cs
+
+    public void RemoveComment(Guid commentId)
+    {
+        if (Statut == EventStatus.Cancelled || Statut == EventStatus.Closed)
+            throw new DomainException("Cannot remove comments from a cancelled or closed event.");
+
+        var comment = _commentaires.FirstOrDefault(c => c.Id == commentId);
+        if (comment is null)
+            throw new DomainException($"Comment {commentId} not found.");
+
+        _commentaires.Remove(comment);
+    }
 
     private void VerifierSiModifiable()
     {
@@ -144,5 +160,47 @@ public sealed class Evenement
 
         if (string.IsNullOrWhiteSpace(personName))
             throw new DomainException("La personne impliquée est obligatoire.");
+    }
+    // src/EventManagement.Domain/Entities/Event.cs
+
+    public void Annuler(DateTimeOffset now)
+    {
+        if (!Statut.CanTransitionTo(EventStatus.Cancelled))
+            throw new DomainException($"Cannot cancel event from status '{Statut.Name}'.");
+
+        Statut = EventStatus.Cancelled;
+        DateMiseAjourUtc = now;
+    }
+    // src/EventManagement.Domain/Entities/Event.cs
+
+    public void Fermer(DateTimeOffset now)
+    {
+        if (!Statut.CanTransitionTo(EventStatus.Closed))
+            throw new DomainException($"Cannot close event from status '{Statut.Name}'.");
+
+        Statut = EventStatus.Closed;
+        DateMiseAjourUtc = now;
+    }
+    // src/EventManagement.Domain/Entities/Event.cs
+
+    public void Confirmer(DateTimeOffset now)
+    {
+        if (!Statut.CanTransitionTo(EventStatus.Confirmed))
+            throw new DomainException($"Cannot confirm event from status '{Statut.Name}'.");
+
+        Statut = EventStatus.Confirmed;
+        DateMiseAjourUtc = now;
+    }
+    // src/EventManagement.Domain/Entities/Event.cs
+
+    public void UpdateComment(Guid commentId, string description, DateTimeOffset now)
+    {
+        if (Statut == EventStatus.Cancelled || Statut == EventStatus.Closed)
+            throw new DomainException("Cannot update comments on a cancelled or closed event.");
+
+        var comment = _commentaires.FirstOrDefault(c => c.Id == commentId)
+            ?? throw new DomainException($"Comment {commentId} not found.");
+
+        comment.MettreAJour(description, now);
     }
 }

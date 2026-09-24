@@ -8,7 +8,8 @@ namespace EventManagement.Application.Interfaces;
  */
 public interface IEvenementRepository
 {
-    //Task<Evenement?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
+    Task<Evenement?> GetByIdWithCommentsAsync(Guid id, CancellationToken cancellationToken = default);
+    Task<Evenement?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
     Task AddAsync(Evenement evenement, CancellationToken cancellationToken = default);
     void Update(Evenement evenement);
     void Delete(Evenement evenement);

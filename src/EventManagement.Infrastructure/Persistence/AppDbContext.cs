@@ -5,6 +5,7 @@ namespace EventManagement.Infrastructure.Persistence;
 using EventManagement.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using System.Data;
 
 public sealed class AppDbContext : DbContext
 {
@@ -22,6 +23,11 @@ public sealed class AppDbContext : DbContext
             suit les changements sur les commentaires via le DbContext qui suit l’Event.
      */
     public DbSet<Evenement> Evenements => Set<Evenement>();
+    // Exposé uniquement pour les QueryServices (CQRS lecture).
+    // Toute modification passe par Evenement (agrégat racine).
+    // Les commands continuent de passer par IEventRepository et l’agrégat Event.
+    //Les queries utilisent le DbSet en lecture seule avec AsNoTracking.
+    public DbSet<Commentaire> Commentaires => Set<Commentaire>();
 
     public AppDbContext(DbContextOptions<AppDbContext> options)
         : base(options)

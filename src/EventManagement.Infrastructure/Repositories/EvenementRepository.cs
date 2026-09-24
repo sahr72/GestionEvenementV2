@@ -43,4 +43,9 @@ public sealed class EvenementRepository : IEvenementRepository
     {
         return _dbContext.SaveChangesAsync(ct);
     }
+
+    public Task<Evenement?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        return _dbContext.Evenements.FindAsync(new object[] { id }, cancellationToken).AsTask();
+    }
 }

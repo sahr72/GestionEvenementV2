@@ -1,7 +1,9 @@
-
 // EventManagement.Application/Interfaces/IEventQueryService.cs
 
+using EventManagement.Application.Common;
+using EventManagement.Application.Queries.GetEventsPaged;
 using EventManagement.Application.ReadModels;
+
 
 namespace EventManagement.Application.Interfaces;
 /*
@@ -10,7 +12,9 @@ namespace EventManagement.Application.Interfaces;
  */
 public interface IEvenementQueryService
 {
-    Task<EventListReadModel> GetEventsPagedAsync(int page,int pageSize, CancellationToken cancellationToken = default);
+   // Task<EventListReadModel> GetEventsPagedAsync(int page,int pageSize, CancellationToken cancellationToken = default);
+
+    Task<PagedResult<EventListItemReadModel>> GetEventsPagedAsync(GetEventsPagedQuery query, CancellationToken ct = default);
 
     Task<EventDetailsReadModel?> GetEventByIdAsync(Guid id,CancellationToken cancellationToken = default);
 

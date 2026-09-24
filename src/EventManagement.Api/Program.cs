@@ -1,10 +1,26 @@
+using EventManagement.Api.Endpoints;
+using EventManagement.Api.Middleware;
 using EventManagement.Application.Commands;
+using EventManagement.Application.Commands.AddComment;
+using EventManagement.Application.Commands.CancelEvent;
+using EventManagement.Application.Commands.CloseEvent;
+using EventManagement.Application.Commands.ConfirmEvent;
+using EventManagement.Application.Commands.CreateEvent;
+using EventManagement.Application.Commands.DeleteComment;
+//using EventManagement.Application.Commands.DeletEvent;
+using EventManagement.Application.Commands.UpdateComment;
+using EventManagement.Application.Commands.UpdateEvent;
 using EventManagement.Application.Interfaces;
+using EventManagement.Application.Queries;
+using EventManagement.Application.Queries.GetComments;
+using EventManagement.Application.Queries.GetEventById;
+using EventManagement.Application.Queries.GetEventsPaged;
+using EventManagement.Application.Validators;
 using EventManagement.Infrastructure.Persistence;
 using EventManagement.Infrastructure.QueryServices;
 using EventManagement.Infrastructure.Repositories;
+using FluentValidation;
 using Microsoft.EntityFrameworkCore;
-
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,15 +28,42 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-//AppDbContext
+// AppDbContext
+// Cela indique à EF Core que les migrations résident dans l’assembly Infrastructure, même si vous lancez la commande depuis le projet Api.
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("Default")));
+    options.UseNpgsql(
+        builder.Configuration.GetConnectionString("Default"),
+        b => b.MigrationsAssembly("EventManagement.Infrastructure")));
 
-//Repositories
+// Repositories & Query Services
 builder.Services.AddScoped<IEvenementRepository, EvenementRepository>();
 builder.Services.AddScoped<IEvenementQueryService, EvenementQueryService>();
-//Handlers
+builder.Services.AddScoped<ICommentaireQueryService, CommentaireQueryService>();
+
+// Command Handlers — Events
 builder.Services.AddScoped<CreateEventCommandHandler>();
+builder.Services.AddScoped<UpdateEventCommandHandler>();
+//builder.Services.AddScoped<DeleteEventCommandHandler>();
+builder.Services.AddScoped<ConfirmEventCommandHandler>();
+builder.Services.AddScoped<CancelEventCommandHandler>();
+builder.Services.AddScoped<CloseEventCommandHandler>();
+
+// Command Handlers — Comments
+builder.Services.AddScoped<AddCommentCommandHandler>();
+builder.Services.AddScoped<UpdateCommentCommandHandler>();
+builder.Services.AddScoped<DeleteCommentCommandHandler>();
+
+// Query Handlers
+builder.Services.AddScoped<GetEventByIdQueryHandler>();
+builder.Services.AddScoped<GetEventsPagedQueryHandler>();
+builder.Services.AddScoped<GetCommentsQueryHandler>();
+
+// Validators (scan automatique de l'assembly Application)
+builder.Services.AddValidatorsFromAssemblyContaining<CreateEventCommandValidator>();
+
+// Gestion centralisée des erreurs avec ProblemDetails
+builder.Services.AddProblemDetails();
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 
 var app = builder.Build();
 
@@ -33,25 +76,12 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-//app.MapGet("/", () => "Hello World!");
-var events = app.MapGroup("/api/events");
+// Pipeline
+app.UseExceptionHandler();
+app.UseStatusCodePages();
 
-events.MapPost("/", async (
-    CreateEventCommand request,
-    CreateEventCommandHandler handler,
-    CancellationToken ct) =>
-{
-    var command = new CreateEventCommand(request.Titre, request.Description, request.PersonneImpliquee);
-    var id = await handler.Handle(command, ct);
-    return Results.Created($"/api/events/{id}", new { id });
-});
+// Endpoints
+app.MapEventEndpoints();
+app.MapCommentEndpoints();
 
-events.MapGet("/{id:guid}", async (
-    Guid id,
-    IEvenementQueryService queryService,
-    CancellationToken ct) =>
-{
-    var result = await queryService.GetEventByIdAsync(id, ct);
-    return result is null ? Results.NotFound() : Results.Ok(result);
-});
 app.Run();

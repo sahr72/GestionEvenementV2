@@ -2,6 +2,6 @@
 
 using EventManagement.Application.ReadModels;
 
-namespace EventManagement.Application.Queries;
+namespace EventManagement.Application.Queries.GetEventById;
 
 public sealed record GetEventByIdQuery(Guid Id);

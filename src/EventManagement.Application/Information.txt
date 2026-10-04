@@ -1,0 +1,5 @@
+﻿Dans la couche Application, Aucun handler n'accède à HttpContext ou ClaimsPrincipal.
+
+Note v3 : les rôles n'apparaissent pas ici. 
+L'Application ne connaît ni Administrator, ni Organizer, ni Participant. 
+Elle ne reçoit qu'un Guid userId et des permissions déjà résolues en policies.

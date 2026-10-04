@@ -5,4 +5,5 @@ namespace EventManagement.Application.DTOs;
 public sealed record CreateEventRequest(
     string Titre,
     string Description,
-    string PersonneImpliquee);
+    string PersonneImpliquee,
+    Guid ProprietaireId);

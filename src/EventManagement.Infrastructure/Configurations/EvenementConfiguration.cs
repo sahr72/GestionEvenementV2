@@ -30,7 +30,8 @@ public sealed class EventConfiguration : IEntityTypeConfiguration<Evenement>
             .IsRequired();
         
         builder.Property(e => e.DateMiseAjourUtc);
-  
+        
+        builder.Property(e => e.ProprietaireId).IsRequired();
 
         builder.Property(e => e.Statut)
             .HasConversion(

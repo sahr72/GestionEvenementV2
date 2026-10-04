@@ -4,4 +4,5 @@ namespace EventManagement.Application.DTOs;
 
 public sealed record AddCommentRequest(
     string Description,
-    DateTimeOffset DateCreationUtc);
+    DateTimeOffset DateCreationUtc,
+    Guid AuteurId);

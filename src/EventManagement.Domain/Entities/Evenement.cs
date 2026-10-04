@@ -2,9 +2,6 @@
 namespace EventManagement.Domain.Entities;
 using EventManagement.Domain.Common;
 using EventManagement.Domain.SmartEnums;
-using System.Runtime.ConstrainedExecution;
-using System.Xml.Linq;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 /*
  * 3. Vérification des principes DDD
     3.1 Racine agrégée
@@ -58,7 +55,7 @@ public sealed class Evenement
         valider les invariants,
         initialiser les valeurs par défaut(Draft, CreatedAtUtc).
     */
-    public static Evenement Create(string titre,string description,string personneImpliquee,DateTimeOffset now)
+    public static Evenement Create(string titre,string description,string personneImpliquee, Guid proprietaireId, DateTimeOffset now)
     {
         Valider(titre, description, personneImpliquee);
 
@@ -69,6 +66,7 @@ public sealed class Evenement
             Description = description.Trim(),
             PersonneImpliquee = personneImpliquee.Trim(),
             Statut = EventStatus.Draft,
+            ProprietaireId = proprietaireId,
             DateCreationUtc = now
         };
     }
@@ -80,6 +78,7 @@ public sealed class Evenement
     public string Description { get; private set; } = string.Empty;
     public string PersonneImpliquee { get; private set; } = string.Empty;
     public EventStatus Statut { get; private set; } = EventStatus.Draft;
+    public Guid ProprietaireId { get; private set; }
     public DateTimeOffset DateCreationUtc { get; private set; }
     public DateTimeOffset? DateMiseAjourUtc { get; private set; }
     public IReadOnlyCollection<Commentaire> Commentaires => _commentaires.AsReadOnly();
@@ -100,10 +99,10 @@ public sealed class Evenement
     Le commentaire est immédiatement ajouté à la collection interne.
     Le retour est le commentaire créé.
     */
-    public Commentaire AddComment(string description, DateTimeOffset now)
+    public Commentaire AddComment(string description, DateTimeOffset now, Guid auteurId)
     {
         VerifierSicommentable();
-        var commentaire = new Commentaire(Guid.NewGuid(), description, now, Id);
+        var commentaire = new Commentaire(Guid.NewGuid(), description, now, Id,auteurId);
 
         _commentaires.Add(commentaire);
         return commentaire;

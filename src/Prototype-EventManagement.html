@@ -1,0 +1,1034 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Prototype pédagogique EventManagement V2 — Labo 2 RBAC, JWT et autorisation par ressource">
+  <title>EventManagement V2 · Labo 2</title>
+  <link rel="preconnect" href="https://cdn.jsdelivr.net">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <style>
+    :root {
+      --ink: #17212b;
+      --muted: #667482;
+      --bg: #f3f6f8;
+      --surface: #ffffff;
+      --navy: #17324d;
+      --blue: #2878b5;
+      --cyan: #3ba9c9;
+      --mint: #2f9c83;
+      --amber: #d8952f;
+      --red: #c84d57;
+      --line: #dce5eb;
+      --shadow: 0 16px 38px rgba(23, 50, 77, .08), 0 2px 7px rgba(23, 50, 77, .05);
+      --radius: 16px;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { background: var(--bg); color: var(--ink); font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+    a { color: inherit; }
+    .app-shell { min-height: 100vh; display: flex; }
+    .sidebar { width: 272px; flex: 0 0 272px; background: var(--navy); color: #d9e8f2; padding: 22px 16px; display: flex; flex-direction: column; position: sticky; top: 0; height: 100vh; z-index: 10; }
+    .brand { display: flex; align-items: center; gap: 12px; padding: 6px 10px 24px; border-bottom: 1px solid rgba(255,255,255,.14); margin-bottom: 20px; }
+    .brand-mark { width: 38px; height: 38px; border-radius: 12px; display: grid; place-items: center; background: linear-gradient(145deg, var(--cyan), #74d4cd); color: #07354b; font-weight: 800; box-shadow: 0 7px 18px rgba(59,169,201,.22); }
+    .brand-title { font-weight: 800; letter-spacing: -.02em; color: #fff; line-height: 1.05; }
+    .brand-sub { color: #8fb1c5; font-size: .72rem; margin-top: 3px; }
+    .nav-label { text-transform: uppercase; letter-spacing: .12em; font-size: .65rem; color: #7da0b5; padding: 8px 12px; }
+    .side-link { display: flex; align-items: center; gap: 11px; padding: 10px 12px; border-radius: 10px; color: #c4d9e5; text-decoration: none; margin: 3px 0; font-size: .92rem; transition: .16s ease; }
+    .side-link:hover, .side-link.active { background: rgba(255,255,255,.1); color: #fff; }
+    .side-link.active { box-shadow: inset 3px 0 0 var(--cyan); }
+    .side-link i { width: 18px; font-size: 1rem; }
+    .sidebar-footer { margin-top: auto; border-top: 1px solid rgba(255,255,255,.14); padding: 16px 8px 0; }
+    .user-mini { display: flex; align-items: center; gap: 10px; padding: 8px; }
+    .avatar { width: 36px; height: 36px; display: grid; place-items: center; border-radius: 50%; background: #d9eef5; color: var(--navy); font-weight: 800; font-size: .8rem; flex: 0 0 auto; }
+    .avatar.avatar-sm { width: 30px; height: 30px; font-size: .68rem; }
+    .main { min-width: 0; flex: 1; }
+    .topbar { height: 74px; background: rgba(255,255,255,.92); border-bottom: 1px solid var(--line); display: flex; align-items: center; justify-content: space-between; padding: 0 clamp(18px, 3vw, 40px); position: sticky; top: 0; z-index: 5; backdrop-filter: blur(12px); }
+    .topbar-kicker { color: var(--muted); font-size: .78rem; letter-spacing: .08em; text-transform: uppercase; }
+    .content { padding: clamp(22px, 3vw, 42px); max-width: 1500px; margin: 0 auto; }
+    .page-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 18px; margin-bottom: 26px; }
+    .eyebrow { font-size: .72rem; text-transform: uppercase; letter-spacing: .13em; color: var(--blue); font-weight: 800; margin-bottom: 7px; }
+    h1, h2, h3, h4 { letter-spacing: -.035em; font-weight: 800; }
+    h1 { font-size: clamp(1.65rem, 2.2vw, 2.35rem); margin: 0; }
+    h2 { font-size: 1.25rem; }
+    .lead-muted { color: var(--muted); max-width: 760px; margin: 8px 0 0; }
+    .card { border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); background: var(--surface); }
+    .card-header { background: transparent; border-bottom: 1px solid var(--line); padding: 18px 20px; }
+    .card-body { padding: 20px; }
+    .stat-card { padding: 20px; height: 100%; position: relative; overflow: hidden; }
+    .stat-card::after { content: ""; position: absolute; width: 100px; height: 100px; border-radius: 50%; right: -36px; top: -36px; background: rgba(59,169,201,.12); }
+    .stat-label { color: var(--muted); font-size: .78rem; text-transform: uppercase; letter-spacing: .08em; font-weight: 700; }
+    .stat-value { font-weight: 850; color: var(--navy); font-size: 2rem; line-height: 1.1; margin-top: 8px; }
+    .stat-note { font-size: .8rem; color: var(--muted); margin-top: 8px; }
+    .accent-blue { border-top: 4px solid var(--blue); }
+    .accent-mint { border-top: 4px solid var(--mint); }
+    .accent-amber { border-top: 4px solid var(--amber); }
+    .accent-red { border-top: 4px solid var(--red); }
+    .btn { border-radius: 10px; font-weight: 700; }
+    .btn-primary { background: var(--blue); border-color: var(--blue); }
+    .btn-primary:hover { background: #1d6499; border-color: #1d6499; }
+    .btn-outline-primary { color: var(--blue); border-color: #86b7d3; }
+    .btn-outline-primary:hover { background: var(--blue); border-color: var(--blue); }
+    .btn-soft { background: #eaf4f8; color: #155879; border: 1px solid #d0e7f0; }
+    .btn-soft:hover { background: #d9edf4; }
+    .toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 18px; }
+    .filter-bar { background: var(--surface); border: 1px solid var(--line); border-radius: 13px; padding: 13px; }
+    .form-control, .form-select { border-color: #ccd9e2; border-radius: 10px; padding: .62rem .78rem; }
+    .form-control:focus, .form-select:focus { border-color: var(--cyan); box-shadow: 0 0 0 .2rem rgba(59,169,201,.17); }
+    .form-label { color: #354858; font-weight: 750; font-size: .86rem; }
+    .form-text { color: var(--muted); }
+    .table { --bs-table-bg: transparent; vertical-align: middle; }
+    .table thead th { font-size: .72rem; text-transform: uppercase; letter-spacing: .09em; color: var(--muted); border-bottom-color: var(--line); white-space: nowrap; }
+    .table tbody td { border-bottom-color: #edf1f4; }
+    .table-hover tbody tr:hover { background: #f7fafb; }
+    .status-badge { border-radius: 999px; padding: .38em .75em; font-size: .73rem; font-weight: 800; white-space: nowrap; }
+    .status-draft { color: #8a5a0a; background: #fff4d9; }
+    .status-confirmed { color: #16677b; background: #dff4f6; }
+    .status-cloture { color: #486174; background: #e8eef2; }
+    .status-annule { color: #943a45; background: #fde5e7; }
+    .role-badge { border-radius: 999px; padding: .35em .7em; font-size: .7rem; font-weight: 800; }
+    .role-admin { color: #6e3c8f; background: #f0e4fb; }
+    .role-organizer { color: #1b648c; background: #e2f1fb; }
+    .role-participant { color: #367a5c; background: #e4f4e9; }
+    .event-title { color: var(--navy); font-weight: 800; text-decoration: none; }
+    .event-title:hover { color: var(--blue); }
+    .event-card { height: 100%; transition: transform .17s ease, box-shadow .17s ease; }
+    .event-card:hover { transform: translateY(-3px); box-shadow: 0 19px 35px rgba(23,50,77,.12); }
+    .event-card .event-top { height: 7px; background: linear-gradient(90deg, var(--blue), var(--cyan)); border-radius: var(--radius) var(--radius) 0 0; }
+    .event-card.event-annule .event-top { background: linear-gradient(90deg, #c84d57, #e8958e); }
+    .event-card.event-cloture .event-top { background: #9aabb7; }
+    .event-meta { font-size: .82rem; color: var(--muted); display: flex; gap: 12px; flex-wrap: wrap; }
+    .event-meta i { color: var(--blue); margin-right: 3px; }
+    .comment-item { border-left: 3px solid #b9dbe6; padding: 14px 0 14px 16px; margin-left: 3px; }
+    .comment-item:last-child { border-left-color: transparent; }
+    .comment-content { color: #344958; line-height: 1.6; margin: 7px 0; }
+    .comment-meta { color: var(--muted); font-size: .76rem; }
+    .hero-panel { background: linear-gradient(135deg, #17324d 0%, #235877 66%, #2f9c83 140%); color: #fff; border: 0; overflow: hidden; position: relative; }
+    .hero-panel::after { content: ""; position: absolute; right: -75px; top: -100px; width: 300px; height: 300px; border: 1px solid rgba(255,255,255,.14); border-radius: 50%; box-shadow: 0 0 0 28px rgba(255,255,255,.04), 0 0 0 56px rgba(255,255,255,.03); }
+    .hero-panel .card-body { position: relative; z-index: 1; padding: 32px; }
+    .hero-number { font-size: 4.2rem; line-height: .95; font-weight: 900; color: #b9f0ea; letter-spacing: -.09em; }
+    .hero-note { color: #c4dce8; max-width: 650px; }
+    .progress { height: 9px; background: #e7eef2; border-radius: 99px; }
+    .progress-bar { border-radius: 99px; }
+    .chart-row { display: grid; grid-template-columns: 120px 1fr 40px; align-items: center; gap: 10px; margin: 12px 0; font-size: .82rem; }
+    .chart-label { color: var(--muted); }
+    .mini-list { display: flex; flex-direction: column; gap: 10px; }
+    .mini-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 11px 0; border-bottom: 1px solid #edf1f4; }
+    .mini-row:last-child { border-bottom: 0; }
+    .empty-state { text-align: center; padding: 45px 20px; color: var(--muted); }
+    .empty-state i { font-size: 2.5rem; color: #9bb4c2; }
+    .timeline { position: relative; padding-left: 22px; }
+    .timeline::before { content: ""; position: absolute; left: 5px; top: 6px; bottom: 6px; width: 2px; background: #d5e5ec; }
+    .timeline-item { position: relative; padding: 0 0 22px 18px; }
+    .timeline-item::before { content: ""; position: absolute; left: -1px; top: 4px; width: 13px; height: 13px; background: var(--cyan); border: 3px solid #e5f4f5; border-radius: 50%; }
+    .timeline-label { font-size: .72rem; color: var(--muted); }
+    .pipeline { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+    .pipeline-step { border: 1px solid var(--line); background: #f8fafb; border-radius: 11px; padding: 12px 9px; min-height: 82px; }
+    .pipeline-step.ok { border-color: #aee0cc; background: #effaf4; }
+    .pipeline-step.fail { border-color: #efb4ba; background: #fff2f3; }
+    .pipeline-step.skip { opacity: .72; }
+    .pipeline-kicker { font-size: .66rem; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); font-weight: 800; }
+    .pipeline-detail { font-size: .73rem; color: #354858; margin-top: 6px; word-break: break-word; }
+    .login-wrap { min-height: 100vh; display: grid; place-items: center; padding: 24px; background: radial-gradient(circle at 88% 10%, #d7f3f3 0, transparent 28%), linear-gradient(145deg, #eef6f8, #f8fbfc); }
+    .login-grid { width: min(1040px, 100%); display: grid; grid-template-columns: 1.1fr .9fr; background: #fff; border-radius: 24px; overflow: hidden; box-shadow: 0 25px 70px rgba(23,50,77,.14); border: 1px solid var(--line); }
+    .login-intro { background: linear-gradient(145deg, #17324d, #23677d); padding: clamp(28px, 5vw, 58px); color: #fff; position: relative; overflow: hidden; }
+    .login-intro::after { content: ""; position: absolute; right: -90px; bottom: -130px; width: 380px; height: 380px; border: 1px solid rgba(255,255,255,.2); border-radius: 50%; box-shadow: 0 0 0 32px rgba(255,255,255,.05), 0 0 0 64px rgba(255,255,255,.04); }
+    .login-form { padding: clamp(26px, 5vw, 58px); }
+    .demo-account { border: 1px dashed #b6ccd8; border-radius: 11px; background: #f5fafc; padding: 10px 12px; cursor: pointer; }
+    .demo-account:hover { background: #eaf5f8; }
+    .token-segment { overflow-wrap: anywhere; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .74rem; padding: 10px; border-radius: 8px; background: #f3f6f8; margin-bottom: 7px; }
+    .token-header { color: #1f6d9e; }
+    .token-payload { color: #8b5b17; }
+    .token-signature { color: #277b5c; }
+    .alert { border-radius: 11px; }
+    .small-caps { text-transform: uppercase; letter-spacing: .1em; font-size: .68rem; font-weight: 800; color: var(--muted); }
+    .permission-chip { display: inline-flex; margin: 4px; padding: 5px 9px; border: 1px solid #cfe0e8; border-radius: 999px; color: #24627a; background: #f1f8fa; font-size: .74rem; font-weight: 700; }
+    .permission-chip.denied { color: #8797a1; background: #f6f7f8; border-color: #e2e7ea; text-decoration: line-through; }
+    .admin-banner { background: #f4ecfb; border: 1px solid #e3cef2; color: #613c7a; border-radius: 12px; padding: 12px 14px; }
+    .toast-stack { position: fixed; right: 20px; bottom: 20px; z-index: 1080; display: flex; flex-direction: column; gap: 10px; width: min(370px, calc(100vw - 40px)); }
+    .toast-card { background: #fff; border: 1px solid var(--line); box-shadow: var(--shadow); border-left: 5px solid var(--blue); padding: 14px 16px; border-radius: 11px; }
+    .toast-card.danger { border-left-color: var(--red); }
+    .toast-card.success { border-left-color: var(--mint); }
+    .mobile-menu { display: none; }
+    :focus-visible { outline: 3px solid rgba(59,169,201,.7); outline-offset: 2px; }
+    @media (max-width: 1000px) {
+      .sidebar { width: 230px; flex-basis: 230px; }
+      .login-grid { grid-template-columns: 1fr; }
+      .login-intro { min-height: 270px; }
+    }
+    @media (max-width: 760px) {
+      .sidebar { display: none; }
+      .sidebar.open { display: flex; position: fixed; left: 0; top: 0; bottom: 0; width: 272px; box-shadow: 20px 0 40px rgba(0,0,0,.2); }
+      .mobile-menu { display: inline-flex; }
+      .topbar { height: 64px; }
+      .topbar-kicker { display: none; }
+      .content { padding: 22px 15px; }
+      .page-head { align-items: flex-start; flex-direction: column; }
+      .pipeline { grid-template-columns: 1fr; }
+      .chart-row { grid-template-columns: 100px 1fr 30px; }
+      .table-responsive { border-radius: 10px; }
+    }
+    @media print {
+      .sidebar, .topbar, .no-print, .toast-stack { display: none !important; }
+      .content { max-width: none; padding: 0; }
+      .card { box-shadow: none; }
+      body { background: #fff; }
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <div id="toastStack" class="toast-stack" aria-live="polite"></div>
+
+  <!-- Bootstrap JS améliore les composants visuels ; le routage principal reste sans dépendance. -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+
+/* =============================================================================
+   EventManagement V2 — Labo 2 · RBAC & Resource Authorization
+   Moteur du prototype : logique PURE (aucune dépendance DOM).
+   Contient : jeu de données, JWT simulé, pipeline d'autorisation en 5 étapes,
+   machine à états du domaine, validations, routeur de navigation.
+   ========================================================================== */
+(function (root) {
+'use strict';
+
+/* ---------------------------------------------------------------- 1. Vocabulaire */
+var ROLES = { ADMIN: 'Administrator', ORGANIZER: 'Organizer', PARTICIPANT: 'Participant' };
+
+var P = {
+  EVENTS_READ:    'Events.Read',
+  EVENTS_CREATE:  'Events.Create',
+  EVENTS_UPDATE:  'Events.Update',
+  EVENTS_CONFIRM: 'Events.Confirm',
+  EVENTS_CANCEL:  'Events.Cancel',
+  EVENTS_CLOSE:   'Events.Close',
+  COMMENTS_READ:   'Comments.Read',
+  COMMENTS_CREATE: 'Comments.Create',
+  COMMENTS_UPDATE: 'Comments.Update',
+  COMMENTS_DELETE: 'Comments.Delete'
+};
+
+var ALL_PERMISSIONS = [
+  P.EVENTS_READ, P.EVENTS_CREATE, P.EVENTS_UPDATE, P.EVENTS_CONFIRM, P.EVENTS_CANCEL, P.EVENTS_CLOSE,
+  P.COMMENTS_READ, P.COMMENTS_CREATE, P.COMMENTS_UPDATE, P.COMMENTS_DELETE
+];
+
+/* Administrator et Organizer portent LES MÊMES permissions (cf. §6.8 de la spec).
+   Seul l'Administrator bénéficie du bypass ressource. */
+var ROLE_PERMISSIONS = {
+  'Administrator': ALL_PERMISSIONS.slice(),
+  'Organizer':     ALL_PERMISSIONS.slice(),
+  'Participant':   [P.EVENTS_READ, P.COMMENTS_READ, P.COMMENTS_CREATE, P.COMMENTS_UPDATE, P.COMMENTS_DELETE]
+};
+
+var STATUTS = { DRAFT: 'Draft', CONFIRMED: 'Confirmed', CLOTURE: 'Cloture', ANNULE: 'Annule' };
+var STATUT_LABELS = { Draft: 'Brouillon', Confirmed: 'Confirmé', Cloture: 'Clôturé', Annule: 'Annulé' };
+
+/* ------------------------------------------------------ 2. Règles du domaine */
+/* Le domaine ne connaît NI rôles NI claims : uniquement des gardes d'état. */
+var DOMAINE = {
+  peutEtreModifie:    function (e) { return e.statut !== STATUTS.ANNULE && e.statut !== STATUTS.CLOTURE; },
+  peutEtreCommentee:  function (e) { return e.statut !== STATUTS.ANNULE && e.statut !== STATUTS.CLOTURE; },
+  peutEtreConfirme:   function (e) { return e.statut === STATUTS.DRAFT; },
+  peutEtreAnnule:     function (e) { return e.statut !== STATUTS.CLOTURE; },
+  peutEtreCloture:    function (e) { return e.statut === STATUTS.CONFIRMED; }
+};
+
+/* --------------------------------------------------------- 3. Validations */
+function vTitre(v) {
+  if (v === undefined || v === null || String(v).trim() === '') return 'Le titre est obligatoire.';
+  var t = String(v).trim();
+  if (t.length < 3)  return 'Le titre doit contenir au moins 3 caractères.';
+  if (t.length > 100) return 'Le titre ne peut pas dépasser 100 caractères.';
+  return null;
+}
+function vDescription(v) {
+  if (v === undefined || v === null || String(v).trim() === '') return 'La description est obligatoire.';
+  var t = String(v).trim();
+  if (t.length < 10)  return 'La description doit contenir au moins 10 caractères.';
+  if (t.length > 500) return 'La description ne peut pas dépasser 500 caractères.';
+  return null;
+}
+function vPersonne(v) {
+  if (v === undefined || v === null || String(v).trim() === '') return 'La personne impliquée est obligatoire.';
+  var t = String(v).trim();
+  if (t.length > 100) return 'Le nom ne peut pas dépasser 100 caractères.';
+  return null;
+}
+function vDate(v) {
+  if (!v) return 'La date de l\u2019événement est obligatoire.';
+  if (isNaN(Date.parse(v))) return 'La date de l\u2019événement est invalide.';
+  return null;
+}
+function vContenu(v) {
+  if (v === undefined || v === null || String(v).trim() === '') return 'Le contenu du commentaire est obligatoire.';
+  var t = String(v).trim();
+  if (t.length < 2)   return 'Le commentaire doit contenir au moins 2 caractères.';
+  if (t.length > 500) return 'Le commentaire ne peut pas dépasser 500 caractères.';
+  return null;
+}
+
+function validateEvent(input) {
+  var errs = {};
+  var a = vTitre(input.titre);               if (a) errs.titre = a;
+  var b = vDescription(input.description);   if (b) errs.description = b;
+  var c = vPersonne(input.personneImpliquee);if (c) errs.personneImpliquee = c;
+  var d = vDate(input.dateEvenement);        if (d) errs.dateEvenement = d;
+  return errs;
+}
+function validateComment(input) {
+  var errs = {};
+  var a = vContenu(input.contenu); if (a) errs.contenu = a;
+  return errs;
+}
+
+/* ----------------------------------------------- 4. Opérations & autorisation */
+/* Chaque opération décrit : la permission requise, la règle ressource, la validation. */
+var OPERATIONS = {
+  'events.read':     { label: 'Lister les événements',    permission: P.EVENTS_READ,    resource: null },
+  'events.readOne':  { label: 'Consulter un événement',   permission: P.EVENTS_READ,    resource: { type: 'event', rule: 'exists' } },
+  'events.create':   { label: 'Créer un événement',       permission: P.EVENTS_CREATE,  resource: null, validate: 'event' },
+  'events.update':   { label: 'Modifier un événement',    permission: P.EVENTS_UPDATE,  resource: { type: 'event', rule: 'owner' }, validate: 'event' },
+  'events.confirm':  { label: 'Confirmer un événement',   permission: P.EVENTS_CONFIRM, resource: { type: 'event', rule: 'owner' } },
+  'events.cancel':   { label: 'Annuler un événement',     permission: P.EVENTS_CANCEL,  resource: { type: 'event', rule: 'owner' } },
+  'events.close':    { label: 'Clôturer un événement',    permission: P.EVENTS_CLOSE,   resource: { type: 'event', rule: 'owner' } },
+  'comments.read':   { label: 'Lister les commentaires',  permission: P.COMMENTS_READ,  resource: null },
+  'comments.create': { label: 'Ajouter un commentaire',   permission: P.COMMENTS_CREATE,resource: { type: 'event',   rule: 'exists' }, validate: 'comment' },
+  'comments.update': { label: 'Modifier un commentaire',  permission: P.COMMENTS_UPDATE,resource: { type: 'comment', rule: 'author' }, validate: 'comment' },
+  'comments.delete': { label: 'Supprimer un commentaire', permission: P.COMMENTS_DELETE,resource: { type: 'comment', rule: 'author' } }
+};
+
+/* ------------------------------------------------ 5. JWT simulé (pédagogique) */
+/* ⚠ Ce n'est PAS de la cryptographie : la « signature » est un hachage de
+   démonstration, uniquement destiné à montrer la structure header.payload.signature. */
+var JWT = { issuer: 'EventManagementLab', audience: 'EventManagementLab', secret: 'demo-secret-labo2' };
+
+function b64url(str) {
+  var b64;
+  if (typeof Buffer !== 'undefined') {
+    b64 = Buffer.from(str, 'utf8').toString('base64');
+  } else {
+    b64 = btoa(unescape(encodeURIComponent(str)));
+  }
+  return b64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+function fromB64url(s) {
+  var b64 = String(s).replace(/-/g, '+').replace(/_/g, '/');
+  while (b64.length % 4) b64 += '=';
+  if (typeof Buffer !== 'undefined') return Buffer.from(b64, 'base64').toString('utf8');
+  return decodeURIComponent(escape(atob(b64)));
+}
+function fakeHash(input) {
+  /* FNV-1a 32 bits ×2, purement démonstratif */
+  var h1 = 0x811c9dc5, h2 = 0x01000193;
+  for (var i = 0; i < input.length; i++) {
+    h1 ^= input.charCodeAt(i); h1 = (h1 * 16777619) >>> 0;
+    h2 = ((h2 << 5) - h2 + input.charCodeAt(i)) >>> 0;
+  }
+  return (h1.toString(16).padStart(8, '0') + h2.toString(16).padStart(8, '0'));
+}
+
+function issueToken(user, options) {
+  options = options || {};
+  var nowSec = Math.floor(Date.now() / 1000);
+  var ttl = options.ttlSeconds === undefined ? 7200 : options.ttlSeconds;
+  var perms = ROLE_PERMISSIONS[user.role] || [];
+  var header = { alg: 'HS256', typ: 'JWT' };
+  var payload = {
+    sub: user.id,
+    name: user.nom,
+    role: user.role,
+    permission: perms,
+    iss: JWT.issuer,
+    aud: JWT.audience,
+    iat: nowSec,
+    exp: options.expired ? nowSec - 60 : nowSec + ttl
+  };
+  var h = b64url(JSON.stringify(header));
+  var p = b64url(JSON.stringify(payload));
+  var sig = b64url(fakeHash(h + '.' + p + '.' + JWT.secret));
+  return h + '.' + p + '.' + sig;
+}
+
+function decodeToken(token) {
+  if (!token || typeof token !== 'string') return { invalid: true, reason: 'Jeton absent.' };
+  var parts = token.split('.');
+  if (parts.length !== 3) return { invalid: true, reason: 'Jeton malformé (3 segments attendus).' };
+  var header, payload;
+  try { header = JSON.parse(fromB64url(parts[0])); payload = JSON.parse(fromB64url(parts[1])); }
+  catch (e) { return { invalid: true, reason: 'Jeton illisible.' }; }
+
+  var expected = b64url(fakeHash(parts[0] + '.' + parts[1] + '.' + JWT.secret));
+  if (expected !== parts[2]) return { invalid: true, reason: 'Signature invalide (contenu altéré).' };
+  if (header.alg !== 'HS256') return { invalid: true, reason: 'Algorithme non autorisé.' };
+  if (payload.iss !== JWT.issuer) return { invalid: true, reason: 'Émetteur (iss) inattendu.' };
+  if (payload.aud !== JWT.audience) return { invalid: true, reason: 'Audience (aud) inattendue.' };
+  if (typeof payload.exp === 'number' && payload.exp < Math.floor(Date.now() / 1000))
+    return { invalid: true, reason: 'Jeton expiré.' };
+  if (!payload.sub) return { invalid: true, reason: 'Claim sub absente.' };
+
+  return {
+    userId: payload.sub,
+    nom: payload.name,
+    role: payload.role,
+    permissions: payload.permission || [],
+    payload: payload,
+    header: header,
+    token: token
+  };
+}
+
+function hasPermission(session, permission) {
+  if (!session || session.invalid) return false;
+  return (session.permissions || []).indexOf(permission) !== -1;
+}
+function isAdministrator(session) {
+  return !!session && !session.invalid && session.role === ROLES.ADMIN;
+}
+
+/* -------------------------------------------------- 6. Jeu de données initial */
+function isoDate(daysFromNow) {
+  var d = new Date(Date.UTC(2025, 10, 1, 9, 0, 0));
+  d.setUTCDate(d.getUTCDate() + daysFromNow);
+  return d.toISOString();
+}
+
+function seed() {
+  var users = [
+    { id: 'u-admin',    nom: 'Amine Belkacem',  email: 'admin@labo.local',   role: 'Administrator', motDePasse: 'Labo2024!', organisation: 'Équipe plateforme' },
+    { id: 'u-claire',   nom: 'Claire Fontaine', email: 'claire@labo.local',  role: 'Organizer',     motDePasse: 'Labo2024!', organisation: 'Pôle architecture' },
+    { id: 'u-youssef',  nom: 'Youssef Rahmani', email: 'youssef@labo.local', role: 'Organizer',     motDePasse: 'Labo2024!', organisation: 'Pôle backend' },
+    { id: 'u-fatou',    nom: 'Fatou Ndiaye',    email: 'fatou@labo.local',   role: 'Participant',   motDePasse: 'Labo2024!', organisation: 'Pôle frontend' },
+    { id: 'u-marc',     nom: 'Marc Lefèvre',    email: 'marc@labo.local',    role: 'Participant',   motDePasse: 'Labo2024!', organisation: 'Pôle qualité' },
+    { id: 'u-lea',      nom: 'Léa Moreau',      email: 'lea@labo.local',     role: 'Participant',   motDePasse: 'Labo2024!', organisation: 'Pôle données' }
+  ];
+
+  var events = [
+    { id: 'e-1', titre: 'Conférence Clean Architecture', description: 'Retour d\u2019expérience sur la séparation des couches dans un projet .NET réel : Domain, Application, Infrastructure et Api.', personneImpliquee: 'Claire Fontaine', proprietaireId: 'u-claire', statut: 'Draft', dateEvenement: isoDate(13), createdAtUtc: isoDate(-20), updatedAtUtc: isoDate(-20) },
+    { id: 'e-2', titre: 'Atelier CQRS pragmatique', description: 'Atelier pratique : commands, queries, read models et quand (ne pas) appliquer CQRS. Exercices sur la solution du labo.', personneImpliquee: 'Youssef Rahmani', proprietaireId: 'u-youssef', statut: 'Draft', dateEvenement: isoDate(20), createdAtUtc: isoDate(-18), updatedAtUtc: isoDate(-15) },
+    { id: 'e-3', titre: 'Hackathon DDD tactique', description: 'Deux jours pour modéliser un domaine métier : agrégats, entités, objets-valeurs et invariants. Équipes de quatre personnes.', personneImpliquee: 'Claire Fontaine', proprietaireId: 'u-claire', statut: 'Confirmed', dateEvenement: isoDate(35), createdAtUtc: isoDate(-30), updatedAtUtc: isoDate(-10) },
+    { id: 'e-4', titre: 'Meetup .NET 8 & Minimal APIs', description: 'Soirée technique : endpoints minimaux, filtres d\u2019endpoint, injection de dépendances et autorisation ressource avec ASP.NET Core.', personneImpliquee: 'Youssef Rahmani', proprietaireId: 'u-youssef', statut: 'Confirmed', dateEvenement: isoDate(41), createdAtUtc: isoDate(-25), updatedAtUtc: isoDate(-8) },
+    { id: 'e-5', titre: 'Séminaire Sécurité & JWT', description: 'Signature, claims, expiration et révocation : ce qu\u2019un jeton auto-porteur garantit — et ce qu\u2019il ne garantit pas.', personneImpliquee: 'Claire Fontaine', proprietaireId: 'u-claire', statut: 'Cloture', dateEvenement: isoDate(-9), createdAtUtc: isoDate(-60), updatedAtUtc: isoDate(-7) },
+    { id: 'e-6', titre: 'Journée portes ouvertes', description: 'Présentation du pôle aux nouveaux arrivants. Événement annulé faute de salle disponible sur le créneau prévu.', personneImpliquee: 'Youssef Rahmani', proprietaireId: 'u-youssef', statut: 'Annule', dateEvenement: isoDate(-3), createdAtUtc: isoDate(-45), updatedAtUtc: isoDate(-12) }
+  ];
+
+  var c = function (id, eventId, auteurId, contenu, days, edited) {
+    return { id: id, evenementId: eventId, auteurId: auteurId, contenu: contenu,
+             createdAtUtc: isoDate(days), updatedAtUtc: edited ? isoDate(days + 1) : isoDate(days) };
+  };
+
+  var comments = [
+    c('c-1',  'e-1', 'u-fatou',   'Est-ce que la couche Application référence vraiment zéro dépendance à EF Core ?', -19),
+    c('c-2',  'e-1', 'u-claire',  'Oui : seules les interfaces de lecture et d\u2019écriture y vivent. EF Core reste dans Infrastructure.', -18, true),
+    c('c-3',  'e-1', 'u-marc',    'Le découpage en projets aide beaucoup à voir les dépendances interdites à la compilation.', -17),
+
+    c('c-4',  'e-2', 'u-youssef', 'Prévoyez votre machine : l\u2019atelier se fait en binôme sur la solution du labo.', -16),
+    c('c-5',  'e-2', 'u-lea',     'Peut-on venir sans avoir fait le labo 1 ? Oui, une remise à niveau de 15 minutes est prévue.', -14),
+
+    c('c-6',  'e-3', 'u-marc',    'Comment seront formées les équipes ? Par tirage au sort ou par affinité ?', -28),
+    c('c-7',  'e-3', 'u-claire',  'Tirage au sort, pour mélanger les niveaux. Chaque équipe aura un référent technique.', -27, true),
+    c('c-8',  'e-3', 'u-fatou',   'Le jury évalue-t-il les invariants métier ou la couverture de tests ?', -25),
+    c('c-9',  'e-3', 'u-admin',   'Les deux, à parts égales. La grille complète sera publiée la veille.', -24),
+
+    c('c-10', 'e-4', 'u-lea',     'Le sujet des filtres d\u2019endpoint m\u2019intéresse : est-ce que ça remplace les middlewares ?', -20),
+    c('c-11', 'e-4', 'u-youssef', 'Non, c\u2019est complémentaire : le filtre s\u2019exécute après l\u2019autorisation, sur un endpoint précis.', -19, true),
+    c('c-12', 'e-4', 'u-fatou',   'Est-ce que la session est enregistrée ? Une rediffusion serait utile.', -15),
+
+    c('c-13', 'e-5', 'u-marc',    'La partie sur la révocation était la plus utile : un jeton reste valide jusqu\u2019à son expiration.', -11),
+    c('c-14', 'e-5', 'u-claire',  'Exactement. D\u2019où les durées courtes complétées par un refresh token révocable.', -10, true),
+    c('c-15', 'e-5', 'u-lea',     'Merci pour les schémas du cycle de vie, beaucoup plus clairs que la documentation officielle.', -9),
+
+    c('c-16', 'e-6', 'u-fatou',   'Dommage pour l\u2019annulation : une nouvelle date est-elle envisagée ?', -13),
+    c('c-17', 'e-6', 'u-youssef', 'Une session de rattrapage est à l\u2019étude pour le trimestre prochain.', -12)
+  ];
+
+  return { users: users, events: events, comments: comments, seq: 100 };
+}
+
+/* ------------------------------------------------- 7. Pipeline d'autorisation */
+function step(key, label, status, detail) { return { key: key, label: label, status: status, detail: detail }; }
+
+var STEP_LABELS = { jwt: 'JWT', permission: 'Permission', ressource: 'Ressource', application: 'Application', domaine: 'Domaine' };
+
+function findEvent(state, id) {
+  for (var i = 0; i < state.events.length; i++) if (state.events[i].id === id) return state.events[i];
+  return null;
+}
+function findComment(state, id) {
+  for (var i = 0; i < state.comments.length; i++) if (state.comments[i].id === id) return state.comments[i];
+  return null;
+}
+function findUser(state, id) {
+  for (var i = 0; i < state.users.length; i++) if (state.users[i].id === id) return state.users[i];
+  return null;
+}
+
+function newId(state, prefix) { state.seq += 1; return prefix + '-' + state.seq; }
+
+/* Dispatch : rejoue exactement l'ordre du pipeline réel
+   JWT → Permission → Ressource → Application (validation) → Domaine (état). */
+function dispatch(state, session, op, payload) {
+  payload = payload || {};
+  var trace = [];
+  var def = OPERATIONS[op];
+  if (!def) throw new Error('Opération inconnue : ' + op);
+
+  /* Étape 1 — JWT */
+  if (!session || session.invalid) {
+    var why = (session && session.reason) ? session.reason : 'Jeton absent, expiré ou invalide.';
+    trace.push(step('jwt', STEP_LABELS.jwt, 'fail', why));
+    return { status: 401, operation: op, trace: trace, errors: null,
+             message: 'Authentification requise.', detail: why };
+  }
+  trace.push(step('jwt', STEP_LABELS.jwt, 'ok', 'sub=' + session.userId + ' · role=' + session.role));
+
+  /* Étape 2 — Permission */
+  if (!hasPermission(session, def.permission)) {
+    trace.push(step('permission', STEP_LABELS.permission, 'fail', def.permission + ' absente du jeton'));
+    return { status: 403, operation: op, trace: trace, errors: null,
+             message: 'Permission insuffisante.', detail: 'Le jeton ne porte pas la permission ' + def.permission + '.' };
+  }
+  trace.push(step('permission', STEP_LABELS.permission, 'ok', def.permission + ' présente'));
+
+  /* Étape 3 — Ressource */
+  var event = null, comment = null;
+  if (def.resource) {
+    if (def.resource.type === 'event') {
+      var eventId = payload.evenementId || payload.id;
+      event = findEvent(state, eventId);
+      if (!event) {
+        trace.push(step('ressource', STEP_LABELS.ressource, 'fail', 'Événement introuvable : ' + eventId));
+        return { status: 404, operation: op, trace: trace, errors: null,
+                 message: 'Ressource inexistante.', detail: 'Aucun événement ne correspond à l\u2019identifiant ' + eventId + '.' };
+      }
+      if (def.resource.rule === 'owner') {
+        var estProprietaire = event.proprietaireId === session.userId;
+        var bypass = isAdministrator(session);
+        if (!estProprietaire && !bypass) {
+          trace.push(step('ressource', STEP_LABELS.ressource, 'fail',
+            'Propriétaire=' + event.proprietaireId + ' ≠ sub=' + session.userId + ' et rôle ≠ Administrator'));
+          return { status: 403, operation: op, trace: trace, errors: null,
+                   message: 'Ressource non accessible.', detail: 'Seul le propriétaire de l\u2019événement (ou un Administrator) peut effectuer cette opération.' };
+        }
+        trace.push(step('ressource', STEP_LABELS.ressource, 'ok',
+          bypass && !estProprietaire ? 'Administrator : bypass ressource (IsInRole)' : 'Propriétaire de la ressource'));
+      } else {
+        trace.push(step('ressource', STEP_LABELS.ressource, 'ok', 'Événement existant'));
+      }
+    } else if (def.resource.type === 'comment') {
+      comment = findComment(state, payload.id);
+      if (!comment) {
+        trace.push(step('ressource', STEP_LABELS.ressource, 'fail', 'Commentaire introuvable : ' + payload.id));
+        return { status: 404, operation: op, trace: trace, errors: null,
+                 message: 'Ressource inexistante.', detail: 'Aucun commentaire ne correspond à l\u2019identifiant ' + payload.id + '.' };
+      }
+      event = findEvent(state, comment.evenementId);
+      if (def.resource.rule === 'author') {
+        var estAuteur = comment.auteurId === session.userId;
+        var bypassC = isAdministrator(session);
+        if (!estAuteur && !bypassC) {
+          trace.push(step('ressource', STEP_LABELS.ressource, 'fail',
+            'Auteur=' + comment.auteurId + ' ≠ sub=' + session.userId + ' et rôle ≠ Administrator'));
+          return { status: 403, operation: op, trace: trace, errors: null,
+                   message: 'Ressource non accessible.', detail: 'Seul l\u2019auteur du commentaire (ou un Administrator) peut effectuer cette opération.' };
+        }
+        trace.push(step('ressource', STEP_LABELS.ressource, 'ok',
+          bypassC && !estAuteur ? 'Administrator : bypass ressource (IsInRole)' : 'Auteur du commentaire'));
+      }
+    }
+  } else {
+    trace.push(step('ressource', STEP_LABELS.ressource, 'skip', 'Aucune règle ressource pour cette opération'));
+  }
+
+  /* Étape 4 — Application : validation */
+  if (def.validate === 'event') {
+    var errs = validateEvent(payload);
+    if (Object.keys(errs).length) {
+      trace.push(step('application', STEP_LABELS.application, 'fail', Object.keys(errs).length + ' champ(s) invalide(s)'));
+      return { status: 400, operation: op, trace: trace, errors: errs,
+               message: 'Validation échouée.', detail: 'Un ou plusieurs champs sont invalides.' };
+    }
+    trace.push(step('application', STEP_LABELS.application, 'ok', 'Validation FluentValidation'));
+  } else if (def.validate === 'comment') {
+    var errsC = validateComment(payload);
+    if (Object.keys(errsC).length) {
+      trace.push(step('application', STEP_LABELS.application, 'fail', 'Contenu invalide'));
+      return { status: 400, operation: op, trace: trace, errors: errsC,
+               message: 'Validation échouée.', detail: 'Le contenu du commentaire est invalide.' };
+    }
+    trace.push(step('application', STEP_LABELS.application, 'ok', 'Validation FluentValidation'));
+  } else {
+    trace.push(step('application', STEP_LABELS.application, 'skip', 'Aucune validation d\u2019entrée'));
+  }
+
+  /* Étape 5 — Domaine : gardes d'état + mutation */
+  var now = new Date().toISOString();
+
+  if (op === 'events.read' || op === 'events.readOne' || op === 'comments.read') {
+    trace.push(step('domaine', STEP_LABELS.domaine, 'skip', 'Lecture : aucune mutation d\u2019état'));
+    return { status: 200, operation: op, trace: trace, errors: null, message: 'OK', detail: '' };
+  }
+
+  if (op === 'events.create') {
+    var ev = {
+      id: newId(state, 'e'), titre: payload.titre.trim(), description: payload.description.trim(),
+      personneImpliquee: payload.personneImpliquee.trim(), proprietaireId: session.userId,
+      statut: STATUTS.DRAFT, dateEvenement: payload.dateEvenement,
+      createdAtUtc: now, updatedAtUtc: now
+    };
+    state.events.push(ev);
+    trace.push(step('domaine', STEP_LABELS.domaine, 'ok', 'Evenement.Create → statut Draft'));
+    return { status: 201, operation: op, trace: trace, errors: null, message: 'Événement créé.', detail: 'Nouvel événement au statut Brouillon.', resourceId: ev.id };
+  }
+
+  if (op === 'events.update') {
+    if (!DOMAINE.peutEtreModifie(event)) {
+      trace.push(step('domaine', STEP_LABELS.domaine, 'fail', 'PeutEtreModifie() = false (statut ' + STATUT_LABELS[event.statut] + ')'));
+      return { status: 409, operation: op, trace: trace, errors: null,
+               message: 'Conflit d\u2019état métier.', detail: 'L\u2019événement ne peut plus être modifié dans son état actuel.' };
+    }
+    event.titre = payload.titre.trim();
+    event.description = payload.description.trim();
+    event.personneImpliquee = payload.personneImpliquee.trim();
+    event.dateEvenement = payload.dateEvenement;
+    event.updatedAtUtc = now;
+    trace.push(step('domaine', STEP_LABELS.domaine, 'ok', 'PeutEtreModifie() = true → Evenement.Modifier()'));
+    return { status: 204, operation: op, trace: trace, errors: null, message: 'Événement modifié.', detail: '', resourceId: event.id };
+  }
+
+  if (op === 'events.confirm') {
+    if (!DOMAINE.peutEtreConfirme(event)) {
+      trace.push(step('domaine', STEP_LABELS.domaine, 'fail', 'Transition Draft → Confirmed impossible depuis ' + STATUT_LABELS[event.statut]));
+      return { status: 409, operation: op, trace: trace, errors: null,
+               message: 'Conflit d\u2019état métier.', detail: 'Seul un événement au statut Brouillon peut être confirmé.' };
+    }
+    event.statut = STATUTS.CONFIRMED; event.updatedAtUtc = now;
+    trace.push(step('domaine', STEP_LABELS.domaine, 'ok', 'Draft → Confirmed'));
+    return { status: 204, operation: op, trace: trace, errors: null, message: 'Événement confirmé.', detail: '', resourceId: event.id };
+  }
+
+  if (op === 'events.cancel') {
+    if (!DOMAINE.peutEtreAnnule(event)) {
+      trace.push(step('domaine', STEP_LABELS.domaine, 'fail', 'Annulation impossible depuis ' + STATUT_LABELS[event.statut]));
+      return { status: 409, operation: op, trace: trace, errors: null,
+               message: 'Conflit d\u2019état métier.', detail: 'Un événement clôturé ne peut pas être annulé.' };
+    }
+    event.statut = STATUTS.ANNULE; event.updatedAtUtc = now;
+    trace.push(step('domaine', STEP_LABELS.domaine, 'ok', '→ Annule'));
+    return { status: 204, operation: op, trace: trace, errors: null, message: 'Événement annulé.', detail: '', resourceId: event.id };
+  }
+
+  if (op === 'events.close') {
+    if (!DOMAINE.peutEtreCloture(event)) {
+      trace.push(step('domaine', STEP_LABELS.domaine, 'fail', 'Transition Confirmed → Cloture impossible depuis ' + STATUT_LABELS[event.statut]));
+      return { status: 409, operation: op, trace: trace, errors: null,
+               message: 'Conflit d\u2019état métier.', detail: 'Seul un événement confirmé peut être clôturé.' };
+    }
+    event.statut = STATUTS.CLOTURE; event.updatedAtUtc = now;
+    trace.push(step('domaine', STEP_LABELS.domaine, 'ok', 'Confirmed → Cloture'));
+    return { status: 204, operation: op, trace: trace, errors: null, message: 'Événement clôturé.', detail: '', resourceId: event.id };
+  }
+
+  if (op === 'comments.create') {
+    if (!DOMAINE.peutEtreCommentee(event)) {
+      trace.push(step('domaine', STEP_LABELS.domaine, 'fail', 'EnsureCommentable() = false (statut ' + STATUT_LABELS[event.statut] + ')'));
+      return { status: 409, operation: op, trace: trace, errors: null,
+               message: 'Conflit d\u2019état métier.', detail: 'Impossible de commenter un événement annulé ou clôturé.' };
+    }
+    var cm = { id: newId(state, 'c'), evenementId: event.id, auteurId: session.userId,
+               contenu: payload.contenu.trim(), createdAtUtc: now, updatedAtUtc: now };
+    state.comments.push(cm);
+    trace.push(step('domaine', STEP_LABELS.domaine, 'ok', 'Evenement.AjouterCommentaire()'));
+    return { status: 201, operation: op, trace: trace, errors: null, message: 'Commentaire ajouté.', detail: '', resourceId: cm.id };
+  }
+
+  if (op === 'comments.update') {
+    if (event && !DOMAINE.peutEtreCommentee(event)) {
+      trace.push(step('domaine', STEP_LABELS.domaine, 'fail', 'Événement ' + STATUT_LABELS[event.statut] + ' : commentaires figés'));
+      return { status: 409, operation: op, trace: trace, errors: null,
+               message: 'Conflit d\u2019état métier.', detail: 'Les commentaires d\u2019un événement annulé ou clôturé ne peuvent plus être modifiés.' };
+    }
+    comment.contenu = payload.contenu.trim(); comment.updatedAtUtc = now;
+    trace.push(step('domaine', STEP_LABELS.domaine, 'ok', 'Evenement.ModifierCommentaire()'));
+    return { status: 204, operation: op, trace: trace, errors: null, message: 'Commentaire modifié.', detail: '', resourceId: comment.id };
+  }
+
+  if (op === 'comments.delete') {
+    if (event && !DOMAINE.peutEtreCommentee(event)) {
+      trace.push(step('domaine', STEP_LABELS.domaine, 'fail', 'Événement ' + STATUT_LABELS[event.statut] + ' : commentaires figés'));
+      return { status: 409, operation: op, trace: trace, errors: null,
+               message: 'Conflit d\u2019état métier.', detail: 'Les commentaires d\u2019un événement annulé ou clôturé ne peuvent plus être supprimés.' };
+    }
+    state.comments = state.comments.filter(function (x) { return x.id !== comment.id; });
+    trace.push(step('domaine', STEP_LABELS.domaine, 'ok', 'Evenement.SupprimerCommentaire()'));
+    return { status: 204, operation: op, trace: trace, errors: null, message: 'Commentaire supprimé.', detail: '', resourceId: comment.id };
+  }
+
+  trace.push(step('domaine', STEP_LABELS.domaine, 'skip', 'Aucune règle de domaine'));
+  return { status: 200, operation: op, trace: trace, errors: null, message: 'OK', detail: '' };
+}
+
+/* --------------------------------------------------- 8. Authentification */
+function authenticate(state, email, motDePasse) {
+  var u = null;
+  for (var i = 0; i < state.users.length; i++) {
+    if (state.users[i].email.toLowerCase() === String(email || '').toLowerCase().trim()) { u = state.users[i]; break; }
+  }
+  if (!u) return { ok: false, error: 'Identifiants invalides.' };
+  if (u.motDePasse !== motDePasse) return { ok: false, error: 'Identifiants invalides.' };
+  return { ok: true, user: u, token: issueToken(u) };
+}
+
+/* --------------------------------------------------- 9. Routeur de navigation */
+var ROUTES = [
+  { path: '#/connexion',                       view: 'login',              guard: 'public' },
+  { path: '#/tableau-de-bord',                 view: 'dashboard',          guard: 'auth' },
+  { path: '#/evenements',                      view: 'events-list',        guard: 'auth', permission: P.EVENTS_READ },
+  { path: '#/evenements/nouveau',              view: 'event-form',         guard: 'auth', permission: P.EVENTS_CREATE, mode: 'create' },
+  { path: '#/evenements/:id/modifier',         view: 'event-form',         guard: 'auth', permission: P.EVENTS_UPDATE, mode: 'edit',  resource: { type: 'event', rule: 'owner' } },
+  { path: '#/evenements/:id',                  view: 'event-detail',       guard: 'auth', permission: P.EVENTS_READ,   resource: { type: 'event', rule: 'exists' } },
+  { path: '#/commentaires',                    view: 'comments-list',      guard: 'auth', permission: P.COMMENTS_READ },
+  { path: '#/administration',                  view: 'admin-home',         guard: 'auth', role: ROLES.ADMIN },
+  { path: '#/administration/utilisateurs',     view: 'admin-users',        guard: 'auth', role: ROLES.ADMIN },
+  { path: '#/administration/permissions',      view: 'admin-permissions',  guard: 'auth', role: ROLES.ADMIN },
+  { path: '#/administration/jetons',           view: 'admin-tokens',       guard: 'auth', role: ROLES.ADMIN },
+  { path: '#/administration/simulateur',       view: 'admin-simulator',    guard: 'auth', role: ROLES.ADMIN },
+  { path: '#/journal',                         view: 'journal',            guard: 'auth' }
+];
+
+function matchRoute(hash) {
+  var clean = String(hash || '').split('?')[0];
+  if (!clean || clean === '#' || clean === '#/') clean = '#/tableau-de-bord';
+  for (var i = 0; i < ROUTES.length; i++) {
+    var r = ROUTES[i];
+    var rp = r.path.split('/'), cp = clean.split('/');
+    if (rp.length !== cp.length) continue;
+    var params = {}, ok = true;
+    for (var j = 0; j < rp.length; j++) {
+      if (rp[j].charAt(0) === ':') params[rp[j].slice(1)] = cp[j];
+      else if (rp[j] !== cp[j]) { ok = false; break; }
+    }
+    if (ok) return { route: r, params: params };
+  }
+  return null;
+}
+
+function resolveRoute(hash, state, session) {
+  var m = matchRoute(hash);
+  if (!m) return { view: 'notfound', outcome: 'notfound', status: 404, params: {},
+                   reason: 'Route inconnue : ' + hash };
+
+  var r = m.route;
+  if (r.guard === 'public') return { view: r.view, outcome: 'ok', status: 200, params: m.params, route: r, mode: r.mode };
+
+  if (!session || session.invalid)
+    return { view: 'login', outcome: 'redirect-login', status: 401, params: m.params, route: r,
+             reason: (session && session.reason) ? session.reason : 'Authentification requise.' };
+
+  if (r.role && session.role !== r.role)
+    return { view: 'forbidden', outcome: 'forbidden', status: 403, params: m.params, route: r,
+             reason: 'Réservé au rôle ' + r.role + '. Rôle courant : ' + session.role + '.' };
+
+  if (r.permission && !hasPermission(session, r.permission))
+    return { view: 'forbidden', outcome: 'forbidden', status: 403, params: m.params, route: r,
+             reason: 'Permission ' + r.permission + ' absente du jeton.' };
+
+  if (r.resource && r.resource.type === 'event') {
+    var ev = findEvent(state, m.params.id);
+    if (!ev)
+      return { view: 'notfound', outcome: 'notfound', status: 404, params: m.params, route: r,
+               reason: 'Aucun événement ne correspond à l\u2019identifiant ' + m.params.id + '.' };
+    if (r.resource.rule === 'owner' && ev.proprietaireId !== session.userId && !isAdministrator(session))
+      return { view: 'forbidden', outcome: 'forbidden', status: 403, params: m.params, route: r,
+               reason: 'Seul le propriétaire de l\u2019événement (ou un Administrator) peut le modifier.' };
+  }
+
+  return { view: r.view, outcome: 'ok', status: 200, params: m.params, route: r, mode: r.mode };
+}
+
+/* ------------------------------------------------------------ 10. Lectures */
+function listEvents(state, filter) {
+  filter = filter || {};
+  var rows = state.events.slice();
+  if (filter.statut) rows = rows.filter(function (e) { return e.statut === filter.statut; });
+  if (filter.proprietaireId) rows = rows.filter(function (e) { return e.proprietaireId === filter.proprietaireId; });
+  if (filter.q) {
+    var q = filter.q.toLowerCase();
+    rows = rows.filter(function (e) {
+      return (e.titre + ' ' + e.description + ' ' + e.personneImpliquee).toLowerCase().indexOf(q) !== -1;
+    });
+  }
+  if (filter.tri === 'date') rows.sort(function (a, b) { return Date.parse(a.dateEvenement) - Date.parse(b.dateEvenement); });
+  else if (filter.tri === 'activite') rows.sort(function (a, b) { return Date.parse(b.updatedAtUtc) - Date.parse(a.updatedAtUtc); });
+  else rows.sort(function (a, b) { return a.titre.localeCompare(b.titre); });
+  return rows;
+}
+
+function commentsOf(state, eventId) {
+  return state.comments
+    .filter(function (c) { return c.evenementId === eventId; })
+    .sort(function (a, b) { return Date.parse(a.createdAtUtc) - Date.parse(b.createdAtUtc); });
+}
+
+function commentCount(state, eventId) {
+  return state.comments.filter(function (c) { return c.evenementId === eventId; }).length;
+}
+
+function getStats(state) {
+  var parStatut = { Draft: 0, Confirmed: 0, Cloture: 0, Annule: 0 };
+  state.events.forEach(function (e) { parStatut[e.statut] = (parStatut[e.statut] || 0) + 1; });
+  var parRole = { Administrator: 0, Organizer: 0, Participant: 0 };
+  state.comments.forEach(function (c) {
+    var u = findUser(state, c.auteurId);
+    if (u) parRole[u.role] = (parRole[u.role] || 0) + 1;
+  });
+  var parEvenement = state.events.map(function (e) {
+    return { id: e.id, titre: e.titre, statut: e.statut, nb: commentCount(state, e.id) };
+  }).sort(function (a, b) { return b.nb - a.nb; });
+
+  return {
+    nbEvenements: state.events.length,
+    nbCommentaires: state.comments.length,
+    nbUtilisateurs: state.users.length,
+    parStatut: parStatut,
+    parRole: parRole,
+    parEvenement: parEvenement,
+    commentables: state.events.filter(DOMAINE.peutEtreCommentee).length,
+    modifiables: state.events.filter(DOMAINE.peutEtreModifie).length,
+    moyenneCommentaires: state.events.length ? Math.round((state.comments.length / state.events.length) * 10) / 10 : 0
+  };
+}
+
+/* ------------------------------------------------ 11. Matrices (pédagogie) */
+function permissionMatrix() {
+  return { permissions: ALL_PERMISSIONS.slice(), roles: [ROLES.ADMIN, ROLES.ORGANIZER, ROLES.PARTICIPANT] };
+}
+function operationMatrix() {
+  return Object.keys(OPERATIONS).map(function (k) {
+    var o = OPERATIONS[k];
+    var regle = '—';
+    if (o.resource) {
+      regle = o.resource.rule === 'owner' ? 'Propriétaire || Administrator'
+            : o.resource.rule === 'author' ? 'Auteur || Administrator'
+            : 'Existence';
+    }
+    return { op: k, label: o.label, permission: o.permission, ressource: regle };
+  });
+}
+
+/* --------------------------------------------------------------- Export */
+root.LaboEngine = {
+  ROLES: ROLES, P: P, ALL_PERMISSIONS: ALL_PERMISSIONS, ROLE_PERMISSIONS: ROLE_PERMISSIONS,
+  STATUTS: STATUTS, STATUT_LABELS: STATUT_LABELS, DOMAINE: DOMAINE, OPERATIONS: OPERATIONS,
+  STEP_LABELS: STEP_LABELS, ROUTES: ROUTES, JWT: JWT,
+  seed: seed, dispatch: dispatch, authenticate: authenticate,
+  issueToken: issueToken, decodeToken: decodeToken,
+  hasPermission: hasPermission, isAdministrator: isAdministrator,
+  validateEvent: validateEvent, validateComment: validateComment,
+  resolveRoute: resolveRoute, matchRoute: matchRoute,
+  listEvents: listEvents, commentsOf: commentsOf, commentCount: commentCount, getStats: getStats,
+  findEvent: findEvent, findComment: findComment, findUser: findUser,
+  permissionMatrix: permissionMatrix, operationMatrix: operationMatrix
+};
+})(typeof globalThis !== 'undefined' ? globalThis : this);
+
+/* Export CommonJS : permet d'exécuter le même moteur dans Node pour les tests,
+   tout en restant un simple <script> côté navigateur. */
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = (typeof globalThis !== 'undefined' ? globalThis : this).LaboEngine;
+}
+
+  </script>
+  <script>
+  'use strict';
+  const E = window.LaboEngine;
+  const root = document.getElementById('root');
+  const toastStack = document.getElementById('toastStack');
+  const DEMO_STORAGE = 'eventmanagement-labo2-demo-token';
+  const state = E.seed();
+  const app = { session: null, currentRoute: null, eventFilter: {}, log: [], modal: null };
+
+  const esc = (v) => String(v ?? '').replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
+  const initials = (name) => String(name || '?').split(' ').filter(Boolean).slice(0,2).map(x => x[0]).join('').toUpperCase();
+  const userById = (id) => E.findUser(state, id) || { nom: 'Utilisateur inconnu', role: 'Unknown' };
+  const currentUser = () => app.session ? E.findUser(state, app.session.userId) : null;
+  const fmtDate = (v, withTime = false) => { const d = new Date(v); if (Number.isNaN(d.getTime())) return '—'; return new Intl.DateTimeFormat('fr-FR', withTime ? { dateStyle:'medium', timeStyle:'short' } : { dateStyle:'medium' }).format(d); };
+  const statusBadge = (s) => `<span class="status-badge status-${String(s).toLowerCase()}">${esc(E.STATUT_LABELS[s] || s)}</span>`;
+  const roleBadge = (role) => `<span class="role-badge role-${String(role).toLowerCase()}">${esc(role)}</span>`;
+  const permission = (p) => app.session && E.hasPermission(app.session, p);
+  const canAdmin = () => app.session && E.isAdministrator(app.session);
+  const eventOwner = (ev) => app.session && (ev.proprietaireId === app.session.userId || canAdmin());
+  const eventCommentable = (ev) => E.DOMAINE.peutEtreCommentee(ev);
+  const pageTitle = { dashboard:'Tableau de bord', 'events-list':'Événements', 'event-detail':'Détail de l’événement', 'event-form':'Formulaire événement', 'comments-list':'Commentaires', 'admin-home':'Administration', 'admin-users':'Utilisateurs', 'admin-permissions':'Droits & policies', 'admin-tokens':'JWT & claims', 'admin-simulator':'Simulateur d’autorisation', journal:'Journal pédagogique', login:'Connexion' };
+
+  function log(type, action, outcome, status, detail) {
+    app.log.unshift({ id: Date.now() + Math.random(), at: new Date().toISOString(), type, action, outcome, status, detail });
+    if (app.log.length > 80) app.log.length = 80;
+  }
+  function toast(title, message, kind='info') {
+    const el = document.createElement('div'); el.className = `toast-card ${kind === 'danger' ? 'danger' : kind === 'success' ? 'success' : ''}`;
+    el.innerHTML = `<div class="d-flex justify-content-between gap-3"><strong>${esc(title)}</strong><button class="btn-close btn-sm" aria-label="Fermer"></button></div><div class="small text-muted mt-1">${esc(message)}</div>`;
+    el.querySelector('button').addEventListener('click', () => el.remove()); toastStack.appendChild(el); setTimeout(() => el.remove(), 5000);
+  }
+  function saveSession() { if (app.session?.token) sessionStorage.setItem(DEMO_STORAGE, app.session.token); else sessionStorage.removeItem(DEMO_STORAGE); }
+  function restoreSession() { const t = sessionStorage.getItem(DEMO_STORAGE); if (t) { const s = E.decodeToken(t); if (!s.invalid) app.session = s; } }
+  function performLogin(email, password) {
+    const result = E.authenticate(state, email, password);
+    if (!result.ok) { toast('Connexion refusée', result.error, 'danger'); return false; }
+    app.session = E.decodeToken(result.token); saveSession(); log('AUTH', 'POST /login', 'OK', 200, `${app.session.nom} · ${app.session.role}`); toast('Connexion réussie', `Bienvenue ${app.session.nom}.`, 'success'); location.hash = '#/tableau-de-bord'; return true;
+  }
+  function logout() { if (app.session) log('AUTH', 'POST /logout', 'OK', 204, app.session.nom); app.session = null; saveSession(); location.hash = '#/connexion'; toast('Session terminée', 'Le jeton a été retiré du stockage de démonstration.'); }
+  function resetDemo() { state.users.splice(0, state.users.length, ...E.seed().users); state.events.splice(0, state.events.length, ...E.seed().events); state.comments.splice(0, state.comments.length, ...E.seed().comments); state.seq = 100; app.log = []; toast('Démonstration réinitialisée', 'Le jeu de données initial est restauré.', 'success'); render(); }
+
+  function render() {
+    const result = E.resolveRoute(location.hash, state, app.session); app.currentRoute = result;
+    if (result.outcome === 'redirect-login') { root.innerHTML = renderLogin(result.reason); bindLogin(); return; }
+    if (result.view === 'login') { root.innerHTML = renderLogin(); bindLogin(); return; }
+    root.innerHTML = renderShell(result);
+    bindShell();
+    const body = document.getElementById('pageBody');
+    if (result.view === 'dashboard') body.innerHTML = renderDashboard();
+    else if (result.view === 'events-list') body.innerHTML = renderEventsList();
+    else if (result.view === 'event-detail') body.innerHTML = renderEventDetail(result.params.id);
+    else if (result.view === 'event-form') body.innerHTML = renderEventForm(result.mode, result.params.id);
+    else if (result.view === 'comments-list') body.innerHTML = renderCommentsList();
+    else if (result.view === 'admin-home') body.innerHTML = renderAdminHome();
+    else if (result.view === 'admin-users') body.innerHTML = renderAdminUsers();
+    else if (result.view === 'admin-permissions') body.innerHTML = renderAdminPermissions();
+    else if (result.view === 'admin-tokens') body.innerHTML = renderAdminTokens();
+    else if (result.view === 'admin-simulator') body.innerHTML = renderSimulator();
+    else if (result.view === 'journal') body.innerHTML = renderJournal();
+    else body.innerHTML = renderError(result.status, result.reason);
+    bindBody();
+  }
+
+  function renderLogin(reason='') {
+    return `<main class="login-wrap"><div class="login-grid">
+      <section class="login-intro"><div class="brand p-0 border-0 mb-5"><div class="brand-mark">EV</div><div><div class="brand-title">EventManagement</div><div class="brand-sub">Labo 2 · RBAC & resource authorization</div></div></div>
+        <div class="eyebrow text-info">Prototype pédagogique</div><h1 class="text-white mb-3">Une interface pour voir l’autorisation à l’œuvre.</h1><p class="login-copy">Explorez le cycle JWT → permission → ressource → application → domaine, avec des données et des transitions métier réalistes.</p>
+        <div class="mt-5 d-flex flex-wrap gap-2"><span class="badge rounded-pill text-bg-light">.NET 8</span><span class="badge rounded-pill text-bg-light">CQRS pragmatique</span><span class="badge rounded-pill text-bg-light">DDD tactique</span></div>
+      </section>
+      <section class="login-form"><div class="eyebrow">Accès à la démonstration</div><h2 class="mb-2">Se connecter</h2><p class="text-muted mb-4">Les comptes sont locaux à cette démo. Aucun appel réseau n’est effectué.</p>
+        ${reason ? `<div class="alert alert-warning py-2"><i class="bi bi-shield-exclamation me-2"></i>${esc(reason)}</div>` : ''}
+        <form id="loginForm" novalidate><div class="mb-3"><label class="form-label" for="loginEmail">Adresse courriel</label><input id="loginEmail" class="form-control" type="email" autocomplete="username" required value="admin@labo.local"><div class="invalid-feedback">Saisissez une adresse.</div></div>
+        <div class="mb-3"><label class="form-label" for="loginPassword">Mot de passe</label><input id="loginPassword" class="form-control" type="password" autocomplete="current-password" required value="Labo2024!"><div class="invalid-feedback">Le mot de passe est obligatoire.</div></div>
+        <button class="btn btn-primary w-100 py-2" type="submit"><i class="bi bi-box-arrow-in-right me-2"></i>Ouvrir la session</button></form>
+        <div class="small-caps mt-4 mb-2">Comptes de démonstration</div><div class="d-grid gap-2">
+          ${[['Administrator','admin@labo.local'],['Organizer','claire@labo.local'],['Participant','fatou@labo.local']].map(x => `<button class="demo-account text-start" data-demo-email="${x[1]}"><div class="d-flex justify-content-between align-items-center"><strong>${x[0]}</strong>${roleBadge(x[0])}</div><div class="small text-muted mt-1">${x[1]} · mot de passe : Labo2024!</div></button>`).join('')}
+        </div><p class="small text-muted mt-4 mb-0"><i class="bi bi-info-circle me-1"></i>Le JWT affiché dans cette interface est simulé pour l’apprentissage. Il ne doit jamais être utilisé en production.</p>
+      </section></div></main>`;
+  }
+
+  function renderShell(route) {
+    const active = route.route?.path || '';
+    const user = currentUser() || { nom: app.session?.nom || 'Utilisateur', role: app.session?.role || '' };
+    return `<div class="app-shell"><aside id="sidebar" class="sidebar"><div class="brand"><div class="brand-mark">EV</div><div><div class="brand-title">EventManagement</div><div class="brand-sub">Labo 2 · mode démo</div></div></div>
+      <nav aria-label="Navigation principale"><div class="nav-label">Espace de travail</div>
+        ${sideLink('#/tableau-de-bord','speedometer2','Tableau de bord', active)}
+        ${sideLink('#/evenements','calendar3','Événements', active)}
+        ${sideLink('#/commentaires','chat-left-text','Commentaires', active)}
+        ${sideLink('#/journal','activity','Journal du pipeline', active)}
+        ${canAdmin() ? `<div class="nav-label mt-3">Administration</div>${sideLink('#/administration','shield-check','Vue admin',active)}${sideLink('#/administration/utilisateurs','people','Utilisateurs',active)}${sideLink('#/administration/permissions','diagram-3','Droits & policies',active)}${sideLink('#/administration/jetons','key','JWT & claims',active)}${sideLink('#/administration/simulateur','terminal','Simulateur',active)}` : ''}
+      </nav><div class="sidebar-footer"><div class="user-mini"><div class="avatar">${initials(user.nom)}</div><div class="min-w-0"><div class="text-white fw-bold text-truncate">${esc(user.nom)}</div><div>${roleBadge(user.role)}</div></div></div><button id="logoutBtn" class="btn btn-sm btn-outline-light w-100 mt-2"><i class="bi bi-box-arrow-right me-1"></i>Se déconnecter</button></div>
+    </aside><div class="main"><header class="topbar"><div class="d-flex align-items-center gap-3"><button id="mobileMenuBtn" class="btn btn-soft mobile-menu" aria-label="Ouvrir le menu"><i class="bi bi-list"></i></button><div><div class="topbar-kicker">EventManagement V2 / Labo 2</div><div class="fw-bold">${esc(pageTitle[route.view] || 'Espace sécurisé')}</div></div></div><div class="d-flex align-items-center gap-2"><span class="badge text-bg-light border d-none d-md-inline-flex"><i class="bi bi-lock-fill me-1"></i>JWT validé</span><button class="btn btn-soft btn-sm" data-route="#/me" id="meBtn"><i class="bi bi-person-circle me-1"></i>Mon identité</button></div></header><main id="pageBody" class="content" tabindex="-1"></main></div></div>`;
+  }
+  function sideLink(href, icon, label, activePath) { const isActive = activePath === href || (href !== '#/tableau-de-bord' && activePath && activePath.startsWith(href)); return `<a class="side-link ${isActive ? 'active' : ''}" href="${href}"><i class="bi bi-${icon}"></i><span>${label}</span></a>`; }
+
+  function pageHead(eyebrow, title, desc, actions='') { return `<div class="page-head"><div><div class="eyebrow">${eyebrow}</div><h1>${title}</h1>${desc ? `<p class="lead-muted">${desc}</p>` : ''}</div><div class="d-flex gap-2 flex-wrap no-print">${actions}</div></div>`; }
+  function renderDashboard() {
+    const st = E.getStats(state), recent = E.listEvents(state, { tri:'activite' }).slice(0,4);
+    const max = Math.max(1, ...Object.values(st.parStatut));
+    return `${pageHead('Vue d’ensemble', `Bonjour ${esc((currentUser()?.nom || '').split(' ')[0] || 'à vous')}.`, 'Le tableau de bord rassemble les états métier, les activités récentes et les points de contrôle du Labo 2.', `<a class="btn btn-primary" href="#/evenements"><i class="bi bi-calendar3 me-2"></i>Voir les événements</a>${permission(E.P.EVENTS_CREATE) ? `<a class="btn btn-outline-primary" href="#/evenements/nouveau"><i class="bi bi-plus-lg me-2"></i>Créer un événement</a>` : ''}`)}
+      <section class="card hero-panel mb-4"><div class="card-body"><div class="row align-items-center g-4"><div class="col-lg-8"><div class="eyebrow text-info">Chaîne d’autorisation active</div><h2 class="text-white mb-3">Les règles ne sont pas cachées dans l’interface.</h2><p class="hero-note mb-0">Chaque action jouée dans ce prototype passe par les mêmes étapes que la spécification : identité JWT, permission globale, accès à la ressource, validation applicative et invariants du domaine.</p></div><div class="col-lg-4 text-lg-end"><div class="hero-number">5</div><div class="text-white-50">étapes observables</div><div class="mt-3 small text-white-50">JWT · Permission · Ressource · Application · Domaine</div></div></div></div></section>
+      <div class="row g-3 mb-4"><div class="col-sm-6 col-xl-3"><div class="card stat-card accent-blue"><div class="stat-label">Événements</div><div class="stat-value">${st.nbEvenements}</div><div class="stat-note">${st.modifiables} encore modifiables</div></div></div><div class="col-sm-6 col-xl-3"><div class="card stat-card accent-mint"><div class="stat-label">Commentaires</div><div class="stat-value">${st.nbCommentaires}</div><div class="stat-note">${st.moyenneCommentaires} par événement</div></div></div><div class="col-sm-6 col-xl-3"><div class="card stat-card accent-amber"><div class="stat-label">Événements commentables</div><div class="stat-value">${st.commentables}</div><div class="stat-note">Draft ou Confirmed</div></div></div><div class="col-sm-6 col-xl-3"><div class="card stat-card accent-red"><div class="stat-label">Utilisateurs de démo</div><div class="stat-value">${st.nbUtilisateurs}</div><div class="stat-note">3 rôles RBAC représentés</div></div></div></div>
+      <div class="row g-4"><div class="col-lg-5"><div class="card h-100"><div class="card-header d-flex justify-content-between align-items-center"><h2 class="mb-0">États des événements</h2><span class="small text-muted">Domaine</span></div><div class="card-body">${Object.keys(st.parStatut).map(k => `<div class="chart-row"><span class="chart-label">${E.STATUT_LABELS[k]}</span><div class="progress"><div class="progress-bar ${k==='Draft'?'bg-warning':k==='Confirmed'?'bg-info':k==='Cloture'?'bg-secondary':'bg-danger'}" style="width:${Math.round(st.parStatut[k]/max*100)}%"></div></div><strong>${st.parStatut[k]}</strong></div>`).join('')}<div class="mt-4 p-3 rounded-3 bg-light small text-muted"><i class="bi bi-lightbulb me-2 text-warning"></i>Une autorisation réussie ne force jamais une transition : le domaine peut encore répondre <strong>409 Conflict</strong>.</div></div></div></div><div class="col-lg-7"><div class="card h-100"><div class="card-header d-flex justify-content-between align-items-center"><h2 class="mb-0">Activité récente</h2><a href="#/evenements" class="small text-decoration-none">Tout voir <i class="bi bi-arrow-right"></i></a></div><div class="card-body"><div class="mini-list">${recent.map(e => `<div class="mini-row"><div class="d-flex gap-3 align-items-center"><div class="avatar avatar-sm">${initials(userById(e.proprietaireId).nom)}</div><div><a class="event-title" href="#/evenements/${e.id}">${esc(e.titre)}</a><div class="small text-muted">${esc(userById(e.proprietaireId).nom)} · ${fmtDate(e.updatedAtUtc, true)}</div></div></div><div class="text-end">${statusBadge(e.statut)}<div class="small text-muted mt-1">${E.commentCount(state,e.id)} commentaire(s)</div></div></div>`).join('')}</div></div></div></div></div>`;
+  }
+
+  function eventActions(e, compact=false) {
+    const owner = eventOwner(e), html=[];
+    html.push(`<a class="btn btn-sm btn-soft" href="#/evenements/${e.id}" title="Consulter"><i class="bi bi-eye"></i>${compact?'':' <span class="d-none d-xl-inline">Consulter</span>'}</a>`);
+    if (owner && permission(E.P.EVENTS_UPDATE) && E.DOMAINE.peutEtreModifie(e)) html.push(`<a class="btn btn-sm btn-soft" href="#/evenements/${e.id}/modifier" title="Modifier"><i class="bi bi-pencil"></i>${compact?'':' <span class="d-none d-xl-inline">Modifier</span>'}</a>`);
+    if (owner && e.statut === 'Draft' && permission(E.P.EVENTS_CONFIRM)) html.push(`<button class="btn btn-sm btn-outline-success" data-event-action="confirm" data-id="${e.id}" title="Confirmer"><i class="bi bi-check2"></i></button>`);
+    if (owner && e.statut !== 'Cloture' && e.statut !== 'Annule' && permission(E.P.EVENTS_CANCEL)) html.push(`<button class="btn btn-sm btn-outline-danger" data-event-action="cancel" data-id="${e.id}" title="Annuler"><i class="bi bi-x-lg"></i></button>`);
+    if (owner && e.statut === 'Confirmed' && permission(E.P.EVENTS_CLOSE)) html.push(`<button class="btn btn-sm btn-outline-secondary" data-event-action="close" data-id="${e.id}" title="Clôturer"><i class="bi bi-lock"></i></button>`);
+    return html.join('');
+  }
+  function renderEventsList() {
+    const f = app.eventFilter, rows = E.listEvents(state, f), canCreate = permission(E.P.EVENTS_CREATE);
+    return `${pageHead('Ressource métier', 'Événements', 'Gérez les agrégats Evenement. La suppression métier est volontairement absente : utilisez Annuler.', canCreate ? `<a class="btn btn-primary" href="#/evenements/nouveau"><i class="bi bi-plus-lg me-2"></i>Nouvel événement</a>` : '')}
+      <div class="filter-bar mb-4"><div class="row g-2 align-items-end"><div class="col-md-5"><label class="form-label" for="eventSearch">Rechercher</label><input id="eventSearch" class="form-control" placeholder="Titre, description, personne…" value="${esc(f.q || '')}"></div><div class="col-md-3"><label class="form-label" for="eventStatus">Statut</label><select id="eventStatus" class="form-select"><option value="">Tous les statuts</option>${Object.keys(E.STATUT_LABELS).map(k=>`<option value="${k}" ${f.statut===k?'selected':''}>${E.STATUT_LABELS[k]}</option>`).join('')}</select></div><div class="col-md-2"><label class="form-label" for="eventSort">Trier</label><select id="eventSort" class="form-select"><option value="titre" ${f.tri==='titre'?'selected':''}>Titre</option><option value="date" ${f.tri==='date'?'selected':''}>Date</option><option value="activite" ${f.tri==='activite'?'selected':''}>Activité</option></select></div><div class="col-md-2"><button id="clearEventFilter" class="btn btn-outline-secondary w-100"><i class="bi bi-arrow-counterclockwise me-1"></i>Réinitialiser</button></div></div></div>
+      <div class="d-flex justify-content-between align-items-center mb-3"><span class="small text-muted">${rows.length} résultat(s) · lecture protégée par <code>Events.Read</code></span><span class="small text-muted">Jeu de données local · ${state.events.length} événements</span></div>
+      <div class="row g-4">${rows.length ? rows.map(e => `<div class="col-md-6 col-xl-4"><article class="card event-card event-${e.statut.toLowerCase()}"><div class="event-top"></div><div class="card-body d-flex flex-column"><div class="d-flex justify-content-between align-items-start gap-2 mb-3">${statusBadge(e.statut)}<span class="small text-muted">${E.commentCount(state,e.id)} <i class="bi bi-chat"></i></span></div><h2 class="h5 mb-2"><a class="event-title" href="#/evenements/${e.id}">${esc(e.titre)}</a></h2><p class="text-muted small flex-grow-1">${esc(e.description)}</p><div class="event-meta mb-3"><span><i class="bi bi-calendar3"></i>${fmtDate(e.dateEvenement)}</span><span><i class="bi bi-person"></i>${esc(userById(e.proprietaireId).nom)}</span></div><div class="d-flex flex-wrap gap-1">${eventActions(e, true)}</div></div></article></div>`).join('') : `<div class="col-12"><div class="card empty-state"><i class="bi bi-calendar-x"></i><h2 class="h5 mt-3">Aucun événement</h2><p>Modifiez les filtres ou créez un nouvel événement.</p></div></div>`}</div>`;
+  }
+
+  function renderEventDetail(id) {
+    const e = E.findEvent(state,id); if (!e) return renderError(404,'Événement introuvable.'); const owner = eventOwner(e), comments = E.commentsOf(state,id);
+    return `${pageHead('Ressource / événement', esc(e.titre), `Propriétaire : ${esc(userById(e.proprietaireId).nom)} · dernière modification : ${fmtDate(e.updatedAtUtc,true)}`, `<a class="btn btn-soft" href="#/evenements"><i class="bi bi-arrow-left me-2"></i>Retour</a>${owner && permission(E.P.EVENTS_UPDATE) && E.DOMAINE.peutEtreModifie(e) ? `<a class="btn btn-primary" href="#/evenements/${e.id}/modifier"><i class="bi bi-pencil me-2"></i>Modifier</a>` : ''}`)}
+      <div class="row g-4"><div class="col-lg-8"><div class="card mb-4"><div class="card-body"><div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4"><div>${statusBadge(e.statut)}<div class="small text-muted mt-2">Identifiant : <code>${esc(e.id)}</code></div></div><div class="d-flex flex-wrap gap-2">${eventActions(e)}</div></div><h2>Description</h2><p class="lead-muted">${esc(e.description)}</p><hr><div class="row g-3 small"><div class="col-md-4"><div class="small-caps">Personne impliquée</div><div class="mt-1 fw-bold">${esc(e.personneImpliquee)}</div></div><div class="col-md-4"><div class="small-caps">Date de l’événement</div><div class="mt-1 fw-bold">${fmtDate(e.dateEvenement,true)}</div></div><div class="col-md-4"><div class="small-caps">Créé le</div><div class="mt-1 fw-bold">${fmtDate(e.createdAtUtc,true)}</div></div></div></div></div>
+        <div class="card"><div class="card-header d-flex justify-content-between align-items-center"><div><h2 class="mb-1">Commentaires <span class="badge text-bg-light">${comments.length}</span></h2><div class="small text-muted">Entité enfant modifiée via l’agrégat Evenement.</div></div>${permission(E.P.COMMENTS_CREATE) && eventCommentable(e) ? `<button id="addCommentBtn" class="btn btn-primary btn-sm"><i class="bi bi-chat-left-text me-1"></i>Ajouter</button>` : ''}</div><div class="card-body">${!eventCommentable(e) ? `<div class="alert alert-secondary py-2"><i class="bi bi-lock me-2"></i>Les commentaires sont figés car l’événement est ${E.STATUT_LABELS[e.statut].toLowerCase()}.</div>` : ''}${comments.length ? comments.map(c => renderComment(c,e)).join('') : `<div class="empty-state py-4"><i class="bi bi-chat-square"></i><p class="mt-2 mb-0">Aucun commentaire.</p></div>`}</div></div></div>
+        <div class="col-lg-4"><div class="card mb-4"><div class="card-header"><h2 class="mb-0">Décision d’accès</h2></div><div class="card-body"><div class="small text-muted mb-3">Pour modifier cette ressource, toutes les cases doivent être franchies.</div><div class="pipeline">${['JWT','Permission','Ressource','Application','Domaine'].map((x,i)=>`<div class="pipeline-step ok"><div class="pipeline-kicker">0${i+1} · ${x}</div><div class="pipeline-detail">${i===0?'Identité validée':i===1?'Events.Read présent':i===2?(owner?'Owner / Admin':'Lecture autorisée'):i===3?'Validation à la commande':'État consulté'}</div></div>`).join('')}</div></div></div><div class="card"><div class="card-header"><h2 class="mb-0">Règles métier</h2></div><div class="card-body small"><ul class="mb-0 ps-3"><li class="mb-2">Modification : propriétaire ou Administrator.</li><li class="mb-2">Confirmé uniquement depuis Draft.</li><li class="mb-2">Clôture uniquement depuis Confirmed.</li><li>Annulé / Clôturé : commentaires figés.</li></ul></div></div></div></div>`;
+  }
+  function renderComment(c, event) {
+    const u = userById(c.auteurId), mine = app.session && c.auteurId === app.session.userId, manageable = (mine || canAdmin()) && permission(E.P.COMMENTS_UPDATE), deletable = (mine || canAdmin()) && permission(E.P.COMMENTS_DELETE);
+    return `<article class="comment-item"><div class="d-flex justify-content-between gap-3"><div class="d-flex gap-2 align-items-center"><div class="avatar avatar-sm">${initials(u.nom)}</div><div><strong>${esc(u.nom)}</strong> ${roleBadge(u.role)}<div class="comment-meta">${fmtDate(c.createdAtUtc,true)}${c.updatedAtUtc !== c.createdAtUtc ? ' · modifié' : ''}</div></div></div><div class="d-flex gap-1">${manageable && E.DOMAINE.peutEtreCommentee(event) ? `<button class="btn btn-sm btn-soft" data-comment-edit="${c.id}" title="Modifier"><i class="bi bi-pencil"></i></button>` : ''}${deletable && E.DOMAINE.peutEtreCommentee(event) ? `<button class="btn btn-sm btn-outline-danger" data-comment-delete="${c.id}" title="Supprimer"><i class="bi bi-trash"></i></button>` : ''}</div></div><div class="comment-content">${esc(c.contenu)}</div></article>`;
+  }
+
+  function renderEventForm(mode, id) {
+    const e = mode === 'edit' ? E.findEvent(state,id) : null; const title = mode === 'edit' ? 'Modifier l’événement' : 'Créer un événement';
+    return `${pageHead(mode === 'edit' ? 'Commande / update' : 'Commande / create', title, mode === 'edit' ? 'La permission et l’accès propriétaire sont vérifiés avant la validation et la garde de domaine.' : 'Un nouvel événement est toujours créé au statut Brouillon.', `<a class="btn btn-soft" href="${e ? `#/evenements/${e.id}` : '#/evenements'}"><i class="bi bi-arrow-left me-2"></i>Annuler</a>`)}
+      <div class="row g-4"><div class="col-lg-8"><div class="card"><div class="card-body"><form id="eventForm" novalidate data-mode="${mode}" data-id="${esc(id || '')}"><div class="row g-3"><div class="col-12"><label class="form-label" for="eventTitre">Titre <span class="text-danger">*</span></label><input class="form-control" id="eventTitre" name="titre" maxlength="100" value="${esc(e?.titre || '')}" required><div class="form-text">3 à 100 caractères.</div><div class="invalid-feedback"></div></div><div class="col-12"><label class="form-label" for="eventDescription">Description <span class="text-danger">*</span></label><textarea class="form-control" id="eventDescription" name="description" rows="5" maxlength="500" required>${esc(e?.description || '')}</textarea><div class="form-text">10 à 500 caractères.</div><div class="invalid-feedback"></div></div><div class="col-md-6"><label class="form-label" for="eventPersonne">Personne impliquée <span class="text-danger">*</span></label><input class="form-control" id="eventPersonne" name="personneImpliquee" maxlength="100" value="${esc(e?.personneImpliquee || currentUser()?.nom || '')}" required><div class="invalid-feedback"></div></div><div class="col-md-6"><label class="form-label" for="eventDate">Date de l’événement <span class="text-danger">*</span></label><input class="form-control" id="eventDate" name="dateEvenement" type="datetime-local" value="${e ? esc(new Date(e.dateEvenement).toISOString().slice(0,16)) : ''}" required><div class="invalid-feedback"></div></div></div><div id="eventFormAlert" class="mt-4"></div><div class="d-flex justify-content-end gap-2 mt-4"><a class="btn btn-outline-secondary" href="${e ? `#/evenements/${e.id}` : '#/evenements'}">Annuler</a><button class="btn btn-primary" type="submit"><i class="bi bi-check2-circle me-2"></i>${mode === 'edit' ? 'Enregistrer les modifications' : 'Créer le brouillon'}</button></div></form></div></div></div><div class="col-lg-4"><div class="card"><div class="card-header"><h2 class="mb-0">Contrôles appliqués</h2></div><div class="card-body small"><div class="timeline"><div class="timeline-item"><strong>1. Permission</strong><div class="timeline-label">${mode === 'edit' ? 'Events.Update' : 'Events.Create'}</div></div><div class="timeline-item"><strong>2. Ressource</strong><div class="timeline-label">${mode === 'edit' ? 'Propriétaire ou Administrator' : 'Non applicable'}</div></div><div class="timeline-item"><strong>3. Validation</strong><div class="timeline-label">Champs et longueurs</div></div><div class="timeline-item"><strong>4. Domaine</strong><div class="timeline-label">${mode === 'edit' ? 'PeutEtreModifie()' : 'Statut initial Draft'}</div></div></div></div></div></div></div>`;
+  }
+
+  function renderCommentsList() {
+    const all = state.comments.slice().sort((a,b)=>Date.parse(b.createdAtUtc)-Date.parse(a.createdAtUtc));
+    return `${pageHead('Entité enfant', 'Commentaires', 'Les commentaires sont consultables globalement, mais leurs modifications passent par leur auteur (ou Administrator) et l’agrégat événement.', `<a class="btn btn-soft" href="#/evenements"><i class="bi bi-calendar3 me-2"></i>Choisir un événement</a>`)}
+      <div class="card"><div class="card-header d-flex justify-content-between align-items-center"><h2 class="mb-0">Fil des commentaires</h2><span class="small text-muted">${all.length} élément(s)</span></div><div class="card-body">${all.map(c=>{const e=E.findEvent(state,c.evenementId),u=userById(c.auteurId); return `<div class="d-flex gap-3 py-3 border-bottom"><div class="avatar">${initials(u.nom)}</div><div class="flex-grow-1"><div class="d-flex flex-wrap justify-content-between gap-2"><div><strong>${esc(u.nom)}</strong> ${roleBadge(u.role)} <span class="text-muted small">sur <a href="#/evenements/${e?.id}" class="event-title">${esc(e?.titre || 'événement supprimé')}</a></span></div><span class="small text-muted">${fmtDate(c.createdAtUtc,true)}</span></div><p class="mb-1 mt-2">${esc(c.contenu)}</p><div class="small text-muted">${e ? statusBadge(e.statut) : ''} · identifiant <code>${esc(c.id)}</code></div></div></div>`}).join('')}</div></div>`;
+  }
+
+  function renderAdminHome() {
+    const st=E.getStats(state); return `${pageHead('Accès Administrator', 'Administration', 'Espace de lecture et de simulation réservé au rôle Administrator. L’interface ne remplace pas les policies du backend.', `<a class="btn btn-soft" href="#/administration/simulateur"><i class="bi bi-terminal me-2"></i>Tester une décision</a>`)}<div class="admin-banner mb-4"><i class="bi bi-shield-check me-2"></i><strong>Administrator actif.</strong> Le bypass ressource est autorisé, mais le jeton doit toujours porter la permission demandée.</div><div class="row g-3 mb-4"><div class="col-md-4"><div class="card stat-card accent-blue"><div class="stat-label">Utilisateurs</div><div class="stat-value">${state.users.length}</div><div class="stat-note"><a href="#/administration/utilisateurs">Gérer les comptes de démo</a></div></div></div><div class="col-md-4"><div class="card stat-card accent-mint"><div class="stat-label">Permissions</div><div class="stat-value">${E.ALL_PERMISSIONS.length}</div><div class="stat-note"><a href="#/administration/permissions">Voir la matrice</a></div></div></div><div class="col-md-4"><div class="card stat-card accent-amber"><div class="stat-label">Traçabilité</div><div class="stat-value">${app.log.length}</div><div class="stat-note"><a href="#/journal">Voir le journal local</a></div></div></div></div><div class="row g-4"><div class="col-lg-7"><div class="card h-100"><div class="card-header"><h2 class="mb-0">Actions d’administration</h2></div><div class="card-body"><div class="row g-3">${[['people','Utilisateurs','#/administration/utilisateurs','Comptes, rôles et simulation de session.'],['diagram-3','Droits & policies','#/administration/permissions','Permissions, rôles et ressources.'],['key','JWT & claims','#/administration/jetons','Émission pédagogique et lecture du jeton.'],['terminal','Simulateur','#/administration/simulateur','Rejouer 401, 403, 404, 409 et succès.']].map(x=>`<div class="col-md-6"><a class="text-decoration-none" href="${x[2]}"><div class="border rounded-3 p-3 h-100 hover-card"><i class="bi bi-${x[0]} fs-4 text-primary"></i><h3 class="h6 mt-2 mb-1">${x[1]}</h3><p class="text-muted small mb-0">${x[3]}</p></div></a></div>`).join('')}</div></div></div></div><div class="col-lg-5"><div class="card h-100"><div class="card-header"><h2 class="mb-0">Répartition des états</h2></div><div class="card-body">${Object.entries(st.parStatut).map(([k,v])=>`<div class="d-flex justify-content-between border-bottom py-2"><span>${E.STATUT_LABELS[k]}</span><strong>${v}</strong></div>`).join('')}<p class="small text-muted mt-3 mb-0">Les rôles ne sont pas une table métier dans ce labo : ils façonnent les claims émises dans le JWT.</p></div></div></div></div>`;
+  }
+  function renderAdminUsers() { return `${pageHead('Administration / identités', 'Utilisateurs de démonstration', 'Les comptes sont des fixtures locales. Le bouton « Simuler » remplace la session courante pour tester les matrices de droits.', `<button id="resetDemoBtn" class="btn btn-outline-secondary"><i class="bi bi-arrow-counterclockwise me-2"></i>Réinitialiser</button>`)}<div class="card"><div class="table-responsive"><table class="table table-hover mb-0"><thead><tr><th>Utilisateur</th><th>Rôle</th><th>Organisation</th><th>Permissions</th><th class="text-end">Action</th></tr></thead><tbody>${state.users.map(u=>`<tr><td><div class="d-flex align-items-center gap-2"><div class="avatar avatar-sm">${initials(u.nom)}</div><div><strong>${esc(u.nom)}</strong><div class="small text-muted">${esc(u.email)}</div></div></div></td><td>${roleBadge(u.role)}</td><td>${esc(u.organisation)}</td><td><span class="badge text-bg-light">${(E.ROLE_PERMISSIONS[u.role]||[]).length} permission(s)</span>${u.role==='Administrator'?'<span class="badge text-bg-light ms-1">bypass ressource</span>':''}</td><td class="text-end"><button class="btn btn-sm btn-soft" data-switch-user="${u.id}"><i class="bi bi-person-badge me-1"></i>Simuler</button></td></tr>`).join('')}</tbody></table></div></div>`; }
+  function renderAdminPermissions() { const matrix=E.operationMatrix(); return `${pageHead('Administration / autorisation', 'Droits & policies', 'La permission est globale ; la ressource et le domaine ajoutent leurs propres décisions.', `<a class="btn btn-soft" href="#/journal"><i class="bi bi-activity me-2"></i>Voir le pipeline</a>`)}<div class="card mb-4"><div class="card-header"><h2 class="mb-0">Rôles × permissions</h2></div><div class="table-responsive"><table class="table mb-0"><thead><tr><th>Permission</th>${['Administrator','Organizer','Participant'].map(r=>`<th>${r}</th>`).join('')}</tr></thead><tbody>${E.ALL_PERMISSIONS.map(p=>`<tr><td><code>${p}</code></td>${['Administrator','Organizer','Participant'].map(r=>`<td>${(E.ROLE_PERMISSIONS[r]||[]).includes(p)?'<span class="text-success fw-bold"><i class="bi bi-check-circle-fill"></i> Oui</span>':'<span class="text-muted"><i class="bi bi-dash-circle"></i> Non</span>'}</td>`).join('')}</tr>`).join('')}</tbody></table></div></div><div class="card"><div class="card-header"><h2 class="mb-0">Opérations protégées</h2></div><div class="table-responsive"><table class="table table-hover mb-0"><thead><tr><th>Opération</th><th>Permission</th><th>Contrôle ressource</th><th>Code métier</th></tr></thead><tbody>${matrix.map(x=>`<tr><td><strong>${x.label}</strong><div class="small text-muted"><code>${x.op}</code></div></td><td><code>${x.permission}</code></td><td>${x.ressource}</td><td><span class="badge text-bg-light">${x.op.split('.')[0]==='events'?'Evenement':'Commentaire'}</span></td></tr>`).join('')}</tbody></table></div></div>`; }
+  function renderAdminTokens() { const u = currentUser(); return `${pageHead('Administration / authentification', 'JWT & claims', 'Visualisez le jeton de la session courante. La signature du prototype est illustrative et ne remplace pas HMAC-SHA256 côté serveur.', `<button id="renewTokenBtn" class="btn btn-primary"><i class="bi bi-arrow-repeat me-2"></i>Réémettre le jeton</button>`)}<div class="row g-4"><div class="col-lg-7"><div class="card"><div class="card-header"><h2 class="mb-0">Payload décodé</h2></div><div class="card-body"><pre class="bg-light rounded-3 p-3 small mb-0" style="white-space:pre-wrap;overflow-wrap:anywhere">${esc(JSON.stringify(app.session.payload,null,2))}</pre></div></div></div><div class="col-lg-5"><div class="card mb-4"><div class="card-header"><h2 class="mb-0">Header.payload.signature</h2></div><div class="card-body">${tokenSegments(app.session.token)}</div></div><div class="card"><div class="card-header"><h2 class="mb-0">Claims interprétées</h2></div><div class="card-body"><div class="d-flex flex-wrap gap-2 mb-3">${(app.session.permissions||[]).map(p=>`<span class="permission-chip">${p}</span>`).join('')}</div><div class="small text-muted">RoleClaimType : <code>ClaimTypes.Role</code><br>NameClaimType : <code>ClaimTypes.NameIdentifier</code><br>Expiration : <strong>${fmtDate(new Date(app.session.payload.exp*1000),true)}</strong></div></div></div></div></div>`; }
+  function tokenSegments(token) { const parts=String(token||'').split('.'); return `<div class="token-segment token-header"><strong>Header</strong><br>${esc(parts[0]||'')}</div><div class="token-segment token-payload"><strong>Payload</strong><br>${esc(parts[1]||'')}</div><div class="token-segment token-signature"><strong>Signature</strong><br>${esc(parts[2]||'')}</div>`; }
+  function renderSimulator() { const defaultOp='events.update'; const ev=state.events[0]; return `${pageHead('Administration / laboratoire', 'Simulateur d’autorisation', 'Jouez une opération et observez la décision HTTP ainsi que chaque étape du pipeline.', `<button id="clearSimBtn" class="btn btn-outline-secondary"><i class="bi bi-eraser me-2"></i>Effacer</button>`)}<div class="row g-4"><div class="col-lg-5"><div class="card"><div class="card-header"><h2 class="mb-0">Paramètres du test</h2></div><div class="card-body"><form id="simForm"><div class="mb-3"><label class="form-label" for="simUser">Identité</label><select id="simUser" class="form-select">${state.users.map(u=>`<option value="${u.id}" ${u.id===app.session.userId?'selected':''}>${esc(u.nom)} — ${u.role}</option>`).join('')}</select></div><div class="mb-3"><label class="form-label" for="simOp">Opération</label><select id="simOp" class="form-select">${Object.entries(E.OPERATIONS).map(([k,o])=>`<option value="${k}" ${k===defaultOp?'selected':''}>${o.label} — ${o.permission}</option>`).join('')}</select></div><div class="mb-3"><label class="form-label" for="simResource">Ressource</label><select id="simResource" class="form-select">${state.events.map(e=>`<option value="${e.id}">${esc(e.titre)} — ${E.STATUT_LABELS[e.statut]}</option>`).join('')}<option value="e-999">Ressource inexistante — e-999</option></select></div><div class="mb-3"><label class="form-label" for="simComment">Commentaire</label><select id="simComment" class="form-select">${state.comments.slice(0,12).map(c=>`<option value="${c.id}">${esc(c.id)} — ${esc(c.contenu.slice(0,55))}</option>`).join('')}<option value="c-999">Commentaire inexistant — c-999</option></select></div><button class="btn btn-primary w-100" type="submit"><i class="bi bi-play-fill me-2"></i>Exécuter la décision</button></form></div></div><div class="card mt-4"><div class="card-body small"><strong>Lecture rapide</strong><p class="text-muted mb-0 mt-2">401 = JWT · 403 = permission ou ressource · 404 = introuvable · 400 = validation · 409 = domaine.</p></div></div></div><div class="col-lg-7"><div id="simResult" class="card"><div class="empty-state"><i class="bi bi-terminal"></i><h2 class="h5 mt-3">Aucune exécution</h2><p>Choisissez une identité et une opération.</p></div></div></div></div>`; }
+  function renderJournal() { return `${pageHead('Observabilité pédagogique', 'Journal du pipeline', 'Chaque interaction significative de la démo est conservée en mémoire pour rendre visibles les codes HTTP et les décisions.', `<button id="clearLogBtn" class="btn btn-outline-secondary"><i class="bi bi-trash me-2"></i>Vider le journal</button>`)}<div class="card"><div class="table-responsive"><table class="table table-hover mb-0"><thead><tr><th>Heure</th><th>Type</th><th>Action</th><th>Résultat</th><th>Détail</th></tr></thead><tbody>${app.log.length ? app.log.map(x=>`<tr><td class="small text-muted">${fmtDate(x.at,true)}</td><td><span class="badge text-bg-light">${x.type}</span></td><td><code>${esc(x.action)}</code></td><td><span class="badge ${x.status>=400?'text-bg-danger':x.outcome==='OK'?'text-bg-success':'text-bg-secondary'}">${x.status} · ${x.outcome}</span></td><td class="small">${esc(x.detail)}</td></tr>`).join('') : `<tr><td colspan="5"><div class="empty-state py-5"><i class="bi bi-activity"></i><p class="mt-2 mb-0">Le journal est vide. Exécutez une action pour voir la chaîne de décision.</p></div></td></tr>`}</tbody></table></div></div>`; }
+  function renderError(status, reason) { return `<div class="card"><div class="card-body empty-state"><div class="display-4 fw-bold text-primary">${status}</div><h1 class="h3 mt-2">Accès impossible</h1><p>${esc(reason || 'La ressource demandée est introuvable.')}</p><a href="#/tableau-de-bord" class="btn btn-primary">Retour au tableau de bord</a></div></div>`; }
+
+  function bindLogin() {
+    document.querySelectorAll('[data-demo-email]').forEach(btn => btn.addEventListener('click', () => { document.getElementById('loginEmail').value = btn.dataset.demoEmail; document.getElementById('loginPassword').value = 'Labo2024!'; }));
+    const form=document.getElementById('loginForm'); if (!form) return; form.addEventListener('submit', e=>{e.preventDefault(); if(!form.checkValidity()){form.classList.add('was-validated'); return;} performLogin(document.getElementById('loginEmail').value,document.getElementById('loginPassword').value);});
+  }
+  function bindShell() {
+    document.getElementById('logoutBtn')?.addEventListener('click', logout);
+    document.getElementById('mobileMenuBtn')?.addEventListener('click', () => document.getElementById('sidebar').classList.toggle('open'));
+    document.querySelectorAll('[data-route]').forEach(x=>x.addEventListener('click',()=>location.hash=x.dataset.route));
+    document.querySelectorAll('.side-link').forEach(x=>x.addEventListener('click',()=>document.getElementById('sidebar')?.classList.remove('open')));
+  }
+  function setFieldError(input, message) { const wrap=input.parentElement; input.classList.toggle('is-invalid',!!message); const fb=wrap.querySelector('.invalid-feedback'); if(fb) fb.textContent=message||''; }
+  function bindBody() {
+    document.querySelectorAll('[data-event-action]').forEach(btn=>btn.addEventListener('click',()=>{ const id=btn.dataset.id, action=btn.dataset.eventAction; const label={confirm:'confirmer',cancel:'annuler',close:'clôturer'}[action]; if(!confirm(`Voulez-vous ${label} cet événement ?`))return; const op='events.'+action; const r=E.dispatch(state,app.session,op,{evenementId:id}); log('DOMAIN',`${op} ${id}`,r.status<400?'OK':'REFUS',r.status,r.detail); if(r.status<400){toast('Opération réussie',r.message,'success');}else toast(`${r.status} · ${r.message}`,r.detail,'danger'); render(); }));
+    document.getElementById('eventSearch')?.addEventListener('input',e=>{app.eventFilter.q=e.target.value; rerenderBody();}); document.getElementById('eventStatus')?.addEventListener('change',e=>{app.eventFilter.statut=e.target.value; rerenderBody();}); document.getElementById('eventSort')?.addEventListener('change',e=>{app.eventFilter.tri=e.target.value; rerenderBody();}); document.getElementById('clearEventFilter')?.addEventListener('click',()=>{app.eventFilter={};rerenderBody();});
+    document.getElementById('eventForm')?.addEventListener('submit',submitEventForm);
+    document.getElementById('addCommentBtn')?.addEventListener('click',()=>openCommentModal(null,app.currentRoute.params.id));
+    document.querySelectorAll('[data-comment-edit]').forEach(b=>b.addEventListener('click',()=>{const c=E.findComment(state,b.dataset.commentEdit);openCommentModal(c,c.evenementId);}));
+    document.querySelectorAll('[data-comment-delete]').forEach(b=>b.addEventListener('click',()=>{if(!confirm('Supprimer ce commentaire ?'))return;const r=E.dispatch(state,app.session,'comments.delete',{id:b.dataset.commentDelete});log('DOMAIN','comments.delete '+b.dataset.commentDelete,r.status<400?'OK':'REFUS',r.status,r.detail);toast(r.status<400?'Commentaire supprimé':`${r.status} · ${r.message}`,r.detail,r.status<400?'success':'danger');render();}));
+    document.getElementById('resetDemoBtn')?.addEventListener('click',()=>{if(confirm('Réinitialiser les données de la démonstration ?'))resetDemo();});
+    document.querySelectorAll('[data-switch-user]').forEach(b=>b.addEventListener('click',()=>{const u=E.findUser(state,b.dataset.switchUser);app.session=E.decodeToken(E.issueToken(u));saveSession();log('AUTH','SIMULATE '+u.role,'OK',200,u.nom);toast('Session simulée',`Vous êtes maintenant ${u.nom} (${u.role}).`,'success');location.hash='#/tableau-de-bord';}));
+    document.getElementById('renewTokenBtn')?.addEventListener('click',()=>{const u=currentUser();app.session=E.decodeToken(E.issueToken(u));saveSession();log('AUTH','POST /dev/token','OK',200,'Jeton réémis pour '+u.role);toast('Jeton réémis','Les claims ont été régénérées.','success');render();});
+    document.getElementById('simForm')?.addEventListener('submit',runSimulation); document.getElementById('clearSimBtn')?.addEventListener('click',()=>{document.getElementById('simResult').innerHTML='<div class="empty-state"><i class="bi bi-terminal"></i><h2 class="h5 mt-3">Aucune exécution</h2><p>Choisissez une identité et une opération.</p></div>';}); document.getElementById('clearLogBtn')?.addEventListener('click',()=>{app.log=[];render();});
+  }
+  function rerenderBody() { const currentHash=location.hash; const result=E.resolveRoute(currentHash,state,app.session); const body=document.getElementById('pageBody'); if(result.view==='events-list') body.innerHTML=renderEventsList(); bindBody(); }
+  function submitEventForm(ev) { ev.preventDefault(); const form=ev.currentTarget, mode=form.dataset.mode,id=form.dataset.id; const payload={titre:document.getElementById('eventTitre').value,description:document.getElementById('eventDescription').value,personneImpliquee:document.getElementById('eventPersonne').value,dateEvenement:document.getElementById('eventDate').value}; const errors=E.validateEvent(payload); ['titre','description','personneImpliquee','dateEvenement'].forEach(k=>setFieldError(document.getElementById('event'+(k==='titre'?'Titre':k==='description'?'Description':k==='personneImpliquee'?'Personne':'Date')),errors[k])); if(Object.keys(errors).length){document.getElementById('eventFormAlert').innerHTML='<div class="alert alert-danger py-2"><i class="bi bi-exclamation-triangle me-2"></i>Corrigez les champs indiqués.</div>';return;} const op=mode==='edit'?'events.update':'events.create'; if(mode==='edit')payload.evenementId=id; const r=E.dispatch(state,app.session,op,payload);log('DOMAIN',op+(id?' '+id:''),r.status<400?'OK':'REFUS',r.status,r.detail);if(r.status>=400){document.getElementById('eventFormAlert').innerHTML=`<div class="alert alert-danger py-2"><strong>${r.status} · ${esc(r.message)}</strong><br><span class="small">${esc(r.detail)}</span></div>`;toast(`${r.status} · ${r.message}`,r.detail,'danger');return;}toast('Opération réussie',r.message,'success'); location.hash='#/evenements/'+r.resourceId; }
+  function openCommentModal(comment,eventId) { const isEdit=!!comment; const modal=document.createElement('div'); modal.className='modal fade'; modal.id='commentModal'; modal.tabIndex=-1; modal.innerHTML=`<div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header"><h2 class="modal-title h5">${isEdit?'Modifier':'Ajouter'} un commentaire</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button></div><form id="commentForm"><div class="modal-body"><label class="form-label" for="commentContent">Contenu</label><textarea id="commentContent" class="form-control" rows="5" maxlength="500" required>${esc(comment?.contenu||'')}</textarea><div class="form-text">2 à 500 caractères.</div><div class="invalid-feedback"></div><div id="commentAlert" class="mt-3"></div></div><div class="modal-footer"><button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Annuler</button><button class="btn btn-primary" type="submit">${isEdit?'Enregistrer':'Publier'}</button></div></form></div></div>`; document.body.appendChild(modal); const bs=new bootstrap.Modal(modal);bs.show();modal.addEventListener('hidden.bs.modal',()=>modal.remove());document.getElementById('commentForm').addEventListener('submit',e=>{e.preventDefault();const contenu=document.getElementById('commentContent').value,er=E.validateComment({contenu});if(er.contenu){document.getElementById('commentContent').classList.add('is-invalid');document.querySelector('#commentContent + .form-text + .invalid-feedback').textContent=er.contenu;return;}const op=isEdit?'comments.update':'comments.create',payload=isEdit?{id:comment.id,contenu}:{evenementId,contenu};const r=E.dispatch(state,app.session,op,payload);log('DOMAIN',op,r.status<400?'OK':'REFUS',r.status,r.detail);if(r.status>=400){document.getElementById('commentAlert').innerHTML=`<div class="alert alert-danger py-2">${r.status} · ${esc(r.detail)}</div>`;return;}bs.hide();toast('Commentaire enregistré',r.message,'success');render();}); }
+  function runSimulation(e) { e.preventDefault(); const uid=document.getElementById('simUser').value, u=E.findUser(state,uid), session=E.decodeToken(E.issueToken(u)),op=document.getElementById('simOp').value, eventId=document.getElementById('simResource').value, commentId=document.getElementById('simComment').value; let payload={}; if(op.startsWith('events.'))payload={id:eventId,evenementId:eventId,titre:'Titre de simulation valide',description:'Description de simulation suffisamment longue.',personneImpliquee:u.nom,dateEvenement:new Date().toISOString()}; else if(op==='comments.create')payload={evenementId:eventId,contenu:'Commentaire de simulation'}; else payload={id:commentId,contenu:'Commentaire de simulation modifié'}; const r=E.dispatch(state,session,op,payload);log('SIMULATOR',op,r.status<400?'OK':'REFUS',r.status,`${u.role} · ${r.detail}`);document.getElementById('simResult').innerHTML=`<div class="card-header d-flex justify-content-between align-items-center"><h2 class="mb-0">Décision</h2><span class="badge ${r.status>=400?'text-bg-danger':'text-bg-success'}">HTTP ${r.status}</span></div><div class="card-body"><div class="alert ${r.status>=400?'alert-danger':'alert-success'}"><strong>${esc(r.message)}</strong><br><span class="small">${esc(r.detail)}</span></div><div class="small-caps mb-2">Trace d’exécution</div><div class="pipeline">${r.trace.map(t=>`<div class="pipeline-step ${t.status}"><div class="pipeline-kicker">${t.label}</div><div class="pipeline-detail">${esc(t.detail)}</div></div>`).join('')}</div></div>`; }
+
+  window.addEventListener('hashchange', render);
+  restoreSession();
+  if (!location.hash) location.hash = app.session ? '#/tableau-de-bord' : '#/connexion'; else render();
+  </script>
+</body>
+</html>

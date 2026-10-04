@@ -8,10 +8,12 @@ public sealed class Commentaire
 {
     private Commentaire() { } // EF Core
 
-    public Commentaire(Guid id, string description, DateTimeOffset dateCreation, Guid eventId)
+    public Commentaire(Guid id, string description, DateTimeOffset dateCreation, Guid eventId, Guid auteurId)
     {
         Id = id;
         SetDescription(description);
+        AuteurId = auteurId != Guid.Empty ? auteurId
+            : throw new DomainException("AuteurId est obligatoire.");
         DateCreationUtc = dateCreation;
         EventId = eventId != Guid.Empty ? eventId
             : throw new DomainException("EventId est obligatoire.");
@@ -22,6 +24,7 @@ public sealed class Commentaire
     public DateTimeOffset DateCreationUtc { get; private set; }
     public DateTimeOffset? DateMiseAJourUtc { get; private set; }
     public Guid EventId { get; private set; }
+    public Guid AuteurId { get; private set; }
 
     public void MettreAJour(string description, DateTimeOffset now)
     {

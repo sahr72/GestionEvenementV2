@@ -1,0 +1,6 @@
+﻿Filtres d'endpoint — spécifiques et simples
+Rappel d'ordre d'exécution (correction v2) : les filtres s'exécutent après le middleware d'autorisation. RequireAuthorization(...) 
+est évalué d'abord (→ 401/403 sur la permission), puis le filtre (→ 404/403 sur la ressource). 
+Un filtre n'est donc atteint que par un utilisateur déjà authentifié et porteur de la permission globale.
+
+Garde-fou : un filtre par ressource. Pas de ResourceAuthorizationFilter<T> générique, pas de ResourceResolver<T>, pas de pipeline abstrait.

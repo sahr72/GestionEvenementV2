@@ -1,0 +1,38 @@
+﻿Lecture du mapping : Administrator et Organizer portent les mêmes permissions. 
+Ce qui les distingue n'est pas le jeton de permission, mais le bypass ressource IsInRole("Administrator") (voir §1.3). 
+Les rôles ne sont donc pas trois ensembles de permissions disjoints : ce sont des personas dont la différence se joue 
+à deux endroits précis (permissions + bypass ressource).
+
+8. Matrice des droits (référence)
+8.1 Permission / Ressource / Domaine
+Opération		HTTP			Permission			Resource			Domaine
+Create Event	POST → 201		Events.Create		—					Evenement.Create
+Read Events		GET → 200		Events.Read			——
+Update Event	PUT → 204		Events.Update		Owner || Admin		PeutEtreModifie
+Confirm Event	POST → 204		Events.Confirm		Owner || Admin		Draft → Confirmed
+Cancel Event	POST → 204		Events.Cancel		Owner || Admin		≠ Cloture
+Close Event		POST → 204		Events.Close		Owner || Admin		Confirmed → Cloture
+Read Comments	GET → 200		Comments.Read		—	—
+Create Comment	POST → 201		Comments.Create		— (permission seule)	AjouterCommentaire
+Update Comment	PUT → 204		Comments.Update		Auteur || Admin		État Event/Comment
+Delete Comment	DELETE → 204	Comments.Delete		Auteur || Admin		État Event/Comment
+Read Me			GET → 200		— (authentifié suffit)	——
+
+8.2 Ajout v3 — Rôles de référence (permissions portées + bypass ressource)
+Rôle			Permissions portées par le jeton				Bypass ressource (IsInRole)
+Administrator	toutes (Events.*, Comments.*)					✅ oui — agit sur toute ressource
+Organizer		toutes (Events.*, Comments.*)					❌ non — propriétaire / auteur seulement
+Participant		Events.Read, Comments.Read/Create/Update/Delete	❌ non — auteur seulement
+
+Matrice role × opération (le ✅ d'Administrator suppose que son jeton porte bien la permission — cf. §1.3) :
+
+Rôle			Créer évt	Lire évt	Modifier/Annuler un évt	Commenter	Modifier/supprimer un commentaire
+Administrator	✅			✅			✅ (tous)				✅			✅ (tous)
+Organizer		✅			✅			✅ (les siens)			✅			✅ (les siens)
+Participant		❌			✅			❌						✅			✅ (les siens)
+
+Codes de statut :
+401 = authentification absente/invalide (ou identité inexploitable dans le jeton)
+403 = authentifié mais autorisation insuffisante (permission OU ressource)
+404 = ressource inexistante
+409 = ressource existante mais opération incompatible avec l'état métier

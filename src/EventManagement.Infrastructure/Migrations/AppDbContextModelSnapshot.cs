@@ -28,6 +28,9 @@ namespace EventManagement.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<Guid>("AuteurId")
+                        .HasColumnType("uuid");
+
                     b.Property<DateTimeOffset>("DateCreationUtc")
                         .HasColumnType("timestamp with time zone");
 
@@ -67,6 +70,9 @@ namespace EventManagement.Infrastructure.Migrations
                     b.Property<string>("PersonneImpliquee")
                         .IsRequired()
                         .HasColumnType("text");
+
+                    b.Property<Guid>("ProprietaireId")
+                        .HasColumnType("uuid");
 
                     b.Property<string>("Statut")
                         .IsRequired()

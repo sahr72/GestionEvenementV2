@@ -22,7 +22,7 @@ public class CreateEventCommandHandlerTests
         var repository = Substitute.For<IEvenementRepository>();
         var handler = new CreateEventCommandHandler(repository);
 
-        var command = new CreateEventCommand("Titre", "Description", "PersonneImpliquee");
+        var command = new CreateEventCommand("Titre", "Description", "PersonneImpliquee", Guid.NewGuid());
 
         var id = await handler.Handle(command, CancellationToken.None);
 

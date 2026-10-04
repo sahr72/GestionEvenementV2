@@ -25,7 +25,8 @@ public sealed class CreateEventCommandHandler
         var aggregat =  Evenement.Create(titre: command.Titre,
                                         description: command.Description,
                                         personneImpliquee: command.PersonneImpliquee, 
-                                        now);
+                                        proprietaireId: command.ProprietaireId,
+                                        now: now);
 
         await _eventRepository.AddAsync(aggregat, ct);
         await _eventRepository.SaveChangesAsync(ct);

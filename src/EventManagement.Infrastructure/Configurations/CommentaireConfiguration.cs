@@ -21,5 +21,6 @@ public sealed class CommentConfiguration : IEntityTypeConfiguration<Commentaire>
             .IsRequired();
 
         builder.Property(c => c.DateMiseAJourUtc);
+        builder.Property(c => c.AuteurId).IsRequired();
     }
 }

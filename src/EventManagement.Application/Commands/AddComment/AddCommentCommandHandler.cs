@@ -20,7 +20,7 @@ public sealed class AddCommentCommandHandler
             ?? throw new NotFoundException($"Event {command.EventId} not found.");
 
         var now = DateTimeOffset.UtcNow;
-        var comment = evt.AddComment(command.Description, now);
+        var comment = evt.AddComment(command.Description, now, command.AuteurId);
 
         await _eventRepository.SaveChangesAsync(ct);
 

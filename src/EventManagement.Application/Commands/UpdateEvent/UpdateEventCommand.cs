@@ -6,4 +6,4 @@ public sealed record UpdateEventCommand(
     Guid Id,
     string Titre,
     string Description,
-    string personneImpliquee);
+    string PersonneImpliquee);

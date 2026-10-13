@@ -23,7 +23,7 @@ public sealed class UpdateEventCommandHandler
 
         var now = DateTimeOffset.UtcNow; // À remplacer par TimeProvider
 
-        aggregate.Update(command.Titre, command.Description, command.personneImpliquee, now);
+        aggregate.Update(command.Titre, command.Description, command.PersonneImpliquee, now);
 
         await _repository.SaveChangesAsync(ct);
     }

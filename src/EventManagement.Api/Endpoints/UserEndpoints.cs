@@ -1,4 +1,8 @@
 ﻿using EventManagement.Api.Security;
+using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
 
 namespace EventManagement.Api.Endpoints
 {
@@ -29,19 +33,88 @@ namespace EventManagement.Api.Endpoints
 
             Emplacement de /dev/token (si implémenté) : ce même fichier, sous if (app.Environment.IsDevelopment()). C'est aussi de l'identité.
          * */
+        //public static IEndpointRouteBuilder MapUserEndpoints(this IEndpointRouteBuilder app)
+        //{
+        //    var group = app.MapGroup("/api/me")
+        //        .WithTags("Me")
+        //        .RequireAuthorization();   // deny by default : authentifié suffit
+
+        //    // "" (et non "/") pour viser exactement /api/me, sans slash terminal ambigu.
+        //    group.MapGet("", (HttpContext http) => Results.Ok(new MeResponse(
+        //        UserId: http.User.GetUserId(),
+        //        Roles: http.User.GetRoles())));
+
+        //    return app;
+        //}
         public static IEndpointRouteBuilder MapUserEndpoints(this IEndpointRouteBuilder app)
         {
             var group = app.MapGroup("/api/me")
                 .WithTags("Me")
-                .RequireAuthorization();   // deny by default : authentifié suffit
+                .RequireAuthorization();
 
-            // "" (et non "/") pour viser exactement /api/me, sans slash terminal ambigu.
             group.MapGet("", (HttpContext http) => Results.Ok(new MeResponse(
                 UserId: http.User.GetUserId(),
                 Roles: http.User.GetRoles())));
 
+            // Endpoint DEV uniquement pour générer un token de test
+            // Pas de .RequireAuthorization() ici, évidemment
+            app.MapPost("/dev/token", (
+                GenerateTokenRequest request,
+                IConfiguration config,
+                IHostEnvironment env) =>
+            {
+                if (!env.IsDevelopment())
+                    return Results.Problem("Disponible uniquement en développement.", statusCode: 403);
+
+                var signingKey = config["Jwt:SigningKey"];
+                if (string.IsNullOrEmpty(signingKey))
+                    return Results.Problem("Jwt:SigningKey non configurée.", statusCode: 500);
+
+                var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(signingKey));
+                var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
+
+                var claims = new List<Claim>
+        {
+            new Claim(JwtRegisteredClaimNames.Sub, request.UserId.ToString()),
+            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+        };
+
+                foreach (var role in request.Roles)
+                {
+                    claims.Add(new Claim(ClaimTypes.Role, role));
+                    // Permissions basées sur les rôles pour le labo
+                    if (role == "Administrator")
+                    {
+                        claims.Add(new Claim("permission", "Event.Manage.All"));
+                        claims.Add(new Claim("permission", "Comment.Manage.All"));
+                    }
+                    if (role == "User")
+                    {
+                        claims.Add(new Claim("permission", "Event.Create"));
+                        claims.Add(new Claim("permission", "Event.Read"));
+                        claims.Add(new Claim("permission", "Comment.Create"));
+                        claims.Add(new Claim("permission", "Comment.Read"));
+                    }
+                }
+
+                var token = new JwtSecurityToken(
+                    issuer: config["Jwt:Issuer"] ?? "EventManagementLab",
+                    audience: config["Jwt:Audience"] ?? "EventManagementLab",
+                    claims: claims,
+                    expires: DateTime.Now.AddHours(2),
+                    signingCredentials: credentials);
+
+                var tokenString = new JwtSecurityTokenHandler().WriteToken(token);
+
+                return Results.Ok(new { Token = tokenString });
+            })
+            .WithTags("Dev")
+            .AllowAnonymous();
+
             return app;
         }
+
+        public sealed record GenerateTokenRequest(Guid UserId, List<string> Roles);
     }
 
     public sealed record MeResponse(Guid UserId, IReadOnlyList<string> Roles);

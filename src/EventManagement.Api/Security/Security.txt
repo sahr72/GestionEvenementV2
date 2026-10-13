@@ -36,3 +36,44 @@ Codes de statut :
 403 = authentifié mais autorisation insuffisante (permission OU ressource)
 404 = ressource inexistante
 409 = ressource existante mais opération incompatible avec l'état métier
+
+taskkill /F /PID 33124
+dotnet run --project src/EventManagement.Api/EventManagement.Api.csproj
+//dans powershell pour les tests d'API
+
+# 1. Générer le token
+$body = @{
+    userId = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
+    roles = @("Organizer")   # <-- "User" n'existe pas dans ta spec v3
+} | ConvertTo-Json
+
+$response = Invoke-RestMethod -Uri http://localhost:5246/dev/token -Method POST `
+    -ContentType "application/json; charset=utf-8" `
+    -Body ([System.Text.Encoding]::UTF8.GetBytes($body))
+
+$token = $response.token
+Write-Host "Token: $token"
+
+# 2. Créer l'événement
+$eventBody = @{
+    Titre = "Événement Test"
+    Description = "Ceci est un événement de test"
+    PersonneImpliquee = "Jean Dupont"
+    # ProprietaireId NE DOIT PAS être ici -- il vient du JWT (voir ci-dessous)
+} | ConvertTo-Json
+
+try {
+    $result = Invoke-RestMethod -Uri http://localhost:5246/api/events -Method POST `
+        -ContentType "application/json; charset=utf-8" `
+        -Headers @{"Authorization"="Bearer $token"} `
+        -Body ([System.Text.Encoding]::UTF8.GetBytes($eventBody))
+    
+    Write-Host "SUCCÈS - ID: $($result.id)"
+} catch {
+    Write-Host "ERREUR STATUS: $($_.Exception.Response.StatusCode.value__)"
+    $stream = $_.Exception.Response.GetResponseStream()
+    $reader = New-Object System.IO.StreamReader($stream)
+    $reader.BaseStream.Position = 0
+    $reader.DiscardBufferedData()
+    Write-Host "ERREUR BODY: $($reader.ReadToEnd())"
+}

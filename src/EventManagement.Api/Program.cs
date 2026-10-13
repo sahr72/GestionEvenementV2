@@ -82,6 +82,7 @@ builder.Services.AddScoped<IEvenementAuthorizationReadService, EvenementAuthoriz
 builder.Services.AddScoped<ICommentaireAuthorizationReadService, CommentaireAuthorizationReadService>();
 
 // Handlers d'autorisation
+
 builder.Services.AddSingleton<IAuthorizationHandler, PermissionAuthorizationHandler>();
 builder.Services.AddSingleton<IAuthorizationHandler, EvenementResourceAuthorizationHandler>();
 builder.Services.AddSingleton<IAuthorizationHandler, CommentaireResourceAuthorizationHandler>();
@@ -156,6 +157,18 @@ builder.Services.AddScoped<GetCommentsQueryHandler>();
 
 // Validation
 builder.Services.AddValidatorsFromAssemblyContaining<CreateEventCommandValidator>();
+builder.Services.AddValidatorsFromAssemblyContaining<CancelEventCommandValidator>();
+builder.Services.AddValidatorsFromAssemblyContaining<CloseEventCommandValidator>();
+builder.Services.AddValidatorsFromAssemblyContaining<ConfirmEventCommandValidator>();
+builder.Services.AddValidatorsFromAssemblyContaining<UpdateEventCommandValidator>();
+builder.Services.AddValidatorsFromAssemblyContaining<GetEventsPagedQueryValidator>();
+
+builder.Services.AddValidatorsFromAssemblyContaining<AddCommentCommandValidator>();
+builder.Services.AddValidatorsFromAssemblyContaining<DeleteCommentCommandValidator>();
+builder.Services.AddValidatorsFromAssemblyContaining<GetCommentsQueryValidator>();
+builder.Services.AddValidatorsFromAssemblyContaining<UpdateCommentCommandValidator>();
+
+
 
 // Gestion d'exceptions ProblemDetails
 builder.Services.AddProblemDetails();

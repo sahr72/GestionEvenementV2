@@ -11,20 +11,20 @@ namespace EventManagement.Application.Authorization
     {
         public static class Events
         {
-            public const string Read = "Events.Read";
-            public const string Create = "Events.Create";
-            public const string Update = "Events.Update";
-            public const string Confirm = "Events.Confirm";
-            public const string Cancel = "Events.Cancel";
-            public const string Close = "Events.Close";
+            public const string Read = "Event.Read";
+            public const string Create = "Event.Create";
+            public const string Update = "Event.Update";
+            public const string Confirm = "Event.Confirm";
+            public const string Cancel = "Event.Cancel";
+            public const string Close = "Event.Close";
         }
 
         public static class Comments
         {
-            public const string Read = "Comments.Read";
-            public const string Create = "Comments.Create";
-            public const string Update = "Comments.Update";
-            public const string Delete = "Comments.Delete";
+            public const string Read = "Comment.Read";
+            public const string Create = "Comment.Create";
+            public const string Update = "Comment.Update";
+            public const string Delete = "Comment.Delete";
         }
     }
 }
